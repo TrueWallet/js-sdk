@@ -1,11 +1,11 @@
 import { SmartContractConfig } from "./smart-contract-config";
-import { Bundler } from "./bundler";
 import { Network } from "./network";
 
 export interface TrueWalletConfig {
-    factorySC: SmartContractConfig;
-    entrypointSC: SmartContractConfig;
-    bundler: Bundler;
-    rpcProviderUrl: string;
-    network: Network;
+  factory: SmartContractConfig;
+  entrypoint: SmartContractConfig;
+  rpcProviderUrl: string;
+  bundleUrl: string;
+  network?: Network;
+  salt?: string;
 }

@@ -5,6 +5,10 @@
 /tmp
 /out-tsc
 /bazel-out
+/cypress/e2e/examples
+/cypress/screenshots
+/cypress/videos
+/cypress/downloads
 
 # Node
 /node_modules
@@ -48,3 +52,5 @@ terraform/.terraform.lock.hcl
 .terr*
 
 .eslintcache
+examples/*
+.env

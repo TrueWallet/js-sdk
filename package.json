@@ -8,20 +8,25 @@
     "url": "https://github.com/TrueWallet/js-sdk.git"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "cypress run",
     "build": "rm -rf dist && rollup -c --bundleConfigAsCjs",
     "start": "rollup -c --bundleConfigAsCjs -w",
-    "lint": "eslint . --cache --ext js,ts"
+    "lint": "eslint . --cache --ext js,ts",
+    "run-example": "npx http-server"
   },
   "author": "",
   "license": "GPL-3.0",
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.5",
+    "@rollup/plugin-node-resolve": "^15.2.3",
     "@rollup/plugin-terser": "^0.4.3",
     "@types/node": "^20.6.0",
     "@typescript-eslint/eslint-plugin": "^6.6.0",
     "@typescript-eslint/parser": "^6.6.0",
+    "cypress": "^13.2.0",
     "eslint": "^8.48.0",
     "rollup": "^3.28.1",
+    "rollup-plugin-dotenv": "^0.5.0",
     "rollup-plugin-typescript2": "^0.35.0",
     "tslib": "^2.6.2",
     "typescript": "^5.2.2"
