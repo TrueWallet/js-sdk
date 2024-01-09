@@ -12,7 +12,8 @@
     "build": "rm -rf dist && rollup -c --bundleConfigAsCjs",
     "start": "rollup -c --bundleConfigAsCjs -w",
     "lint": "eslint . --cache --ext js,ts",
-    "run-example": "npx http-server -c-1"
+    "example:browser": "npx http-server -c-1",
+    "example:node": "node ./examples/node/index.js"
   },
   "author": "",
   "license": "GPL-3.0",

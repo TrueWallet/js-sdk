@@ -54,6 +54,7 @@ const config = [{
     inlineDynamicImports: true,
   }],
   plugins: [
+    dotenv.default(),
     nodeResolve({
       browser: false,
       preferBuiltins: true,

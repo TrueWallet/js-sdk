@@ -93,8 +93,7 @@ export class TrueWalletRecoveryModule {
   }
 
   async pendingGuardian(): Promise<string[]> {
-    // FIXME typo
-    return this.recoveryModuleSC['pendingGuarian'](this.walletAddress);
+    return this.recoveryModuleSC['pendingGuardian'](this.walletAddress);
   }
 
   async getGuardiansHash(): Promise<string> {
