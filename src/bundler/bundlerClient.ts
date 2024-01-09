@@ -3,6 +3,12 @@ import { UserOperationData } from "../user-operation-builder";
 import { BundlerError, BundlerErrorCodes } from "./bundler-error";
 import { ethers } from "ethers";
 
+
+/**
+ * @type BundlerConfig - parameters for bundler client
+ * @param url - the url of the bundler server
+ * @param entrypoint - the address of the entrypoint smart contract
+ * */
 export type BundlerConfig = {
   url: string,
   entrypoint: string,
@@ -15,6 +21,10 @@ export type GasEstimation = {
   verificationGas: number,
 }
 
+
+/**
+ * @class BundlerClient - http client for interacting with the bundler server
+ * */
 export class BundlerClient {
   protected readonly bundlerUrl: string;
   protected readonly entrypoint: string;
@@ -25,7 +35,12 @@ export class BundlerClient {
     this.entrypoint = ethers.utils.getAddress(config.entrypoint);
   }
 
-  async sendUserOperation(operation : UserOperationData): Promise<any> {
+  /**
+   * @method sendUserOperation - send user operation to the bundler server
+   * @param operation - user operation data
+   * @returns Promise<string> - userOperationHash
+   * */
+  async sendUserOperation(operation : UserOperationData): Promise<string> {
     return await this.fetch(BundlerMethods.sendUserOperation, [operation, this.entrypoint]);
   }
 
@@ -33,12 +48,12 @@ export class BundlerClient {
     return this.fetch<GasEstimation>(BundlerMethods.estimateUserOperationGas, [operation, this.entrypoint]);
   }
 
-  getUserOperationByHash(hash: string): Promise<UserOperationData> {
+  getUserOperationByHash(hash: string): Promise<UserOperationData | null> {
     return this.fetch<UserOperationData>(BundlerMethods.getUserOperationByHash, [hash, this.entrypoint]);
   }
 
-  getUserOperationReceipt(hash: string): Promise<any> {
-    return this.fetch(BundlerMethods.getUserOperationReceipt, [hash, this.entrypoint]);
+  getUserOperationReceipt(hash: string): Promise<any | null> {
+    return this.fetch(BundlerMethods.getUserOperationReceipt, [hash]);
   }
 
   getSupportedEntryPoints(): Promise<string[]> {

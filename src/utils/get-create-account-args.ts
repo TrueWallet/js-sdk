@@ -1,11 +1,27 @@
 import { ethers } from "ethers";
+import { Modules } from "../constants";
+import { RecoveryModuleData } from "../modules";
+import { TrueWalletConfig } from "../interfaces";
 
-export const getCreateWalletArgs = (entrypoint: string, owner: string, salt: string, modules: string[]): any[] => {
+export const getCreateWalletArgs = (
+  config: TrueWalletConfig,
+  owner: string,
+  modules: string[]
+): any[] => {
+
+  const securityInitData = getSecurityModuleInitData();
   return [
-    entrypoint,
+    config.entrypoint.address,
     owner,
-    172800,
-    modules,
-    ethers.utils.solidityKeccak256(['string'], [salt])
+    [
+      securityInitData,
+      ...modules,
+    ],
+    ethers.utils.solidityKeccak256(['string'], [config.salt])
   ];
 }
+
+export const getSecurityModuleInitData = (): string => {
+  const securityCallData = ethers.utils.defaultAbiCoder.encode(['uint32'], [1]);
+  return ethers.utils.hexConcat([Modules.SecurityControlModule, securityCallData]);
+};

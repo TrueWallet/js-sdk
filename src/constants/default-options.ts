@@ -1,8 +1,8 @@
 import { TrueWalletConfig } from "../interfaces";
-import { factoryABI } from "./factory-abi";
-import { entrypointABI } from "./entrypoint-abi";
+import { factoryABI } from "../abis/factory-abi";
+import { entrypointABI } from "../abis/entrypoint-abi";
 
-export const defaultOptions: TrueWalletConfig = {
+const defaultOptions: TrueWalletConfig = {
   factory: {
     address: <string>process.env.FACTORY_ADDRESS,
     abi: factoryABI,
@@ -14,3 +14,5 @@ export const defaultOptions: TrueWalletConfig = {
     abi: entrypointABI,
   },
 };
+
+export default defaultOptions;

@@ -1,18 +1,16 @@
 import { TrueWalletConfig } from "./interfaces";
-import { Contract, ethers, providers, Signer } from "ethers";
-import {
-  BalanceOfAbi,
-  DecimalsAbi,
-  defaultOptions,
-  TransferAbi,
-  TrueWalletAbi,
-  TrueWalletErrorCodes
-} from "./constants";
+import { Contract, ethers, Signer } from "ethers";
+import { Modules, TrueWalletErrorCodes } from "./constants";
+import { BalanceOfAbi, DecimalsAbi, TransferAbi, TrueWalletAbi, } from "./abis";
 import { UserOperationBuilder } from "./user-operation-builder";
-import { TrueWalletError } from "./types";
+import { TrueWalletError, TrueWalletModules } from "./types";
 import { BundlerClient } from "./bundler";
 import { encodeFunctionData } from "./utils";
 import { getCreateWalletArgs } from "./utils/get-create-account-args";
+import { TrueWalletRecoveryModule } from "./modules";
+import defaultOptions from "./constants/default-options";
+import { SecurityControlModuleAbi } from "./abis/security-control-module-abi";
+
 
 export class TrueWalletSDK {
   protected rpcProvider!: ethers.providers.JsonRpcProvider;
@@ -21,6 +19,8 @@ export class TrueWalletSDK {
   protected factorySC!: Contract;
   private walletSC!: Contract;
   private owner!: Signer;
+
+  private socialRecoveryModule: TrueWalletRecoveryModule | null = null;
 
   operationBuilder!: UserOperationBuilder;
   bundlerClient: BundlerClient;
@@ -57,12 +57,17 @@ export class TrueWalletSDK {
     this.walletSC = new ethers.Contract(walletAddress, TrueWalletAbi, this.owner);
 
     this.operationBuilder = new UserOperationBuilder({
+      walletConfig: this.config,
       rpcProvider: this.rpcProvider,
       walletSC: this.walletSC,
-      entrypoint: this.config.entrypoint,
       owner: this.owner,
-      salt: <string>this.config.salt,
-      factoryAddress: this.config.factory.address,
+    });
+
+    this.socialRecoveryModule = new TrueWalletRecoveryModule({
+      walletAddress: this.walletAddress,
+      operationBuilder: this.operationBuilder,
+      bundlerClient: this.bundlerClient,
+      signer: this.owner,
     });
 
     return this;
@@ -70,11 +75,11 @@ export class TrueWalletSDK {
 
   private async getWalletAddress(): Promise<string> {
     const args = getCreateWalletArgs(
-      this.config.entrypoint.address,
+      this.config,
       await this.owner.getAddress(),
-      <string>this.config.salt,
-      []
+      [],
     );
+
     return this.factorySC['getWalletAddress'](...args);
   }
 
@@ -117,17 +122,19 @@ export class TrueWalletSDK {
     return this.bundlerClient.sendUserOperation(userOperation);
   }
 
-  async sendErc20(recipient: string, amount: string, tokenAddress: string): Promise<providers.TransactionReceipt> {
+  async sendErc20(recipient: string, amount: string, tokenAddress: string): Promise<any> {
     const tokenContract = new ethers.Contract(tokenAddress, [...DecimalsAbi, ...TransferAbi], this.rpcProvider);
     const decimals = await tokenContract.decimals();
+
+    const txData = tokenContract.interface.encodeFunctionData('transfer', [
+        recipient,
+        ethers.utils.parseUnits(amount, decimals),
+      ]);
 
     const data = encodeFunctionData(TrueWalletAbi, 'execute', [
       tokenContract.address,
       ethers.constants.Zero,
-      tokenContract.interface.encodeFunctionData('transfer', [
-        recipient,
-        ethers.utils.parseUnits(amount, decimals),
-      ]),
+      txData,
     ]);
 
     const userOperation = await this.operationBuilder.buildOperation({
@@ -138,12 +145,11 @@ export class TrueWalletSDK {
     return this.bundlerClient.sendUserOperation(userOperation);
   }
 
-  async deployWallet(): Promise<providers.TransactionReceipt> {
+  async deployWallet(): Promise<string> {
     const args = getCreateWalletArgs(
-      this.config.entrypoint.address,
+      this.config,
       await this.owner.getAddress(),
-      <string>this.config.salt,
-      []
+      [],
     );
 
     const data = encodeFunctionData(this.config.factory.abi, 'createWallet', args);
@@ -154,5 +160,45 @@ export class TrueWalletSDK {
     });
 
     return await this.bundlerClient.sendUserOperation(userOperation);
+  }
+
+  // MODULES
+  async installModule(module: TrueWalletModules, moduleData: any): Promise<string> {
+    const moduleAddress = Modules[module];
+
+    // TODO: check if security module is already installed, throw error if not
+    // TODO: check if module is already installed
+    switch (moduleAddress) {
+      case Modules.SocialRecoveryModule:
+        return await (<TrueWalletRecoveryModule>this.socialRecoveryModule).install(moduleData);
+      default:
+        throw new TrueWalletError({
+          code: TrueWalletErrorCodes.MODULE_NOT_SUPPORTED,
+          message: `Module ${module} is not supported`,
+        });
+    }
+  }
+
+  async removeModule(module: TrueWalletModules): Promise<string> {
+    const moduleAddress = Modules[module];
+    const data = encodeFunctionData(TrueWalletAbi, 'removeModule', [moduleAddress]);
+
+    const security = new ethers.Contract(Modules.SecurityControlModule, SecurityControlModuleAbi, this.owner);
+    const txResponse = await security.execute(this.walletAddress, data);
+
+    const txReceipt = await txResponse.wait();
+    return txReceipt.transactionHash;
+  }
+
+  async getInstalledModules(): Promise<string[]> {
+    return this.walletSC['listModules']();
+  }
+
+  getModuleAddress(module: TrueWalletModules): string {
+    return Modules[module];
+  }
+
+  async isWalletOwner(address: string): Promise<boolean> {
+    return this.walletSC['isOwner'](address);
   }
 }

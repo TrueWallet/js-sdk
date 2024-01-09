@@ -1,20 +1,20 @@
 import { OperationParams, UserOperationData } from "./user-operation-data";
 import { BigNumber, Contract, ethers, Signer, Wallet } from "ethers";
-import { SmartContractConfig } from "../interfaces";
+import { TrueWalletConfig } from "../interfaces";
 import { getCreateWalletArgs } from "../utils/get-create-account-args";
 import { encodeFunctionData } from "../utils";
-import { factoryABI } from "../constants";
+import { factoryABI } from "../abis";
 
 export interface UserOperationBuilderConfig {
+  walletConfig: TrueWalletConfig
   rpcProvider: ethers.providers.JsonRpcProvider;
   walletSC: Contract;
-  entrypoint: SmartContractConfig,
   owner: Signer;
-  salt: string;
-  factoryAddress: string;
 }
 
 export class UserOperationBuilder {
+  private readonly trueWalletConfig: TrueWalletConfig;
+
   owner: Signer;
   walletSC: Contract;
   entrypointSC: Contract;
@@ -23,12 +23,13 @@ export class UserOperationBuilder {
   factoryAddress: string;
 
   constructor(config: UserOperationBuilderConfig) {
+    this.trueWalletConfig = config.walletConfig;
     this.rpcProvider = config.rpcProvider;
     this.owner = config.owner;
     this.walletSC = config.walletSC;
-    this.factoryAddress = config.factoryAddress;
-    this.entrypointSC = new ethers.Contract(config.entrypoint.address, config.entrypoint.abi, this.rpcProvider);
-    this.salt = config.salt;
+    this.factoryAddress = config.walletConfig.factory.address;
+    this.entrypointSC = new ethers.Contract(config.walletConfig.entrypoint.address, config.walletConfig.entrypoint.abi, this.rpcProvider);
+    this.salt = <string>config.walletConfig.salt;
   }
 
   async buildOperation(operation: OperationParams): Promise<UserOperationData> {
@@ -39,6 +40,7 @@ export class UserOperationBuilder {
     const maxPriorityFeePerGas = 1_500_000_000; // fixme https://github.com/stackup-wallet/userop.js/blob/ef1a5fc368fd84422ee35a240b99aabae76c83e8/src/preset/middleware/gasPrice.ts#L4
     const maxFeePerGas = Number(block.baseFeePerGas?.mul(2).add(maxPriorityFeePerGas).toString())
 
+    // FIXME: clear callData if directly deploy wallet
     const op = {
       sender: operation.sender,
       nonce: isDeployed ? await this.getNonce() : ethers.utils.hexlify(0),
@@ -70,9 +72,8 @@ export class UserOperationBuilder {
 
   private async getInitCode(): Promise<string> {
     const args = getCreateWalletArgs(
-      this.entrypointSC.address,
+      this.trueWalletConfig,
       await this.owner.getAddress(),
-      this.salt,
       []
     );
 

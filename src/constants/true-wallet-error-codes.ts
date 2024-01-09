@@ -1,3 +1,4 @@
 export enum TrueWalletErrorCodes {
   CONFIG_ERROR = 'CONFIG_ERROR',
+  MODULE_NOT_SUPPORTED = 'MODULE_NOT_SUPPORTED',
 }
