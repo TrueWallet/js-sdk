@@ -42,6 +42,7 @@ const config = [{
   ]
 }, {
   input: 'src/index.ts',
+  external: ['cross-fetch', 'cross-fetch/polyfill'],
   output: [{
     dir: 'dist/node/cjs',
     format: 'cjs',
