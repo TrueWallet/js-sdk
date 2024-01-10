@@ -1,11 +1,13 @@
+import { Addressable } from "ethers";
+
 export interface OperationParams {
-  sender: string;
+  sender: Addressable;
   data: string;
 }
 
 export interface UserOperationData {
-  sender: string;
-  nonce: number | string;
+  sender: Addressable;
+  nonce: bigint | string;
   initCode: string;
   callData: string;
   callGasLimit: number | string;

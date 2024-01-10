@@ -1,6 +1,6 @@
-import { ethers } from "ethers";
+import { Interface } from "ethers";
 
 export const encodeFunctionData = (scAbi: any[], functionName: string, functionParams: unknown[]) => {
-  const abiInterface = new ethers.utils.Interface(scAbi);
+  const abiInterface = new Interface(scAbi);
   return abiInterface.encodeFunctionData(functionName, functionParams);
 }

@@ -1,5 +1,5 @@
 import { OperationParams, UserOperationData } from "./user-operation-data";
-import { BigNumber, Contract, ethers, Signer, Wallet } from "ethers";
+import { concat, Contract, getBytes, JsonRpcProvider, Signer, toBeHex, } from "ethers";
 import { TrueWalletConfig } from "../interfaces";
 import { getCreateWalletArgs } from "../utils/get-create-account-args";
 import { encodeFunctionData } from "../utils";
@@ -7,7 +7,7 @@ import { factoryABI } from "../abis";
 
 export interface UserOperationBuilderConfig {
   walletConfig: TrueWalletConfig
-  rpcProvider: ethers.providers.JsonRpcProvider;
+  rpcProvider: JsonRpcProvider;
   walletSC: Contract;
   owner: Signer;
 }
@@ -18,7 +18,7 @@ export class UserOperationBuilder {
   owner: Signer;
   walletSC: Contract;
   entrypointSC: Contract;
-  rpcProvider: ethers.providers.JsonRpcProvider;
+  rpcProvider: JsonRpcProvider;
   salt: string;
   factoryAddress: string;
 
@@ -28,32 +28,32 @@ export class UserOperationBuilder {
     this.owner = config.owner;
     this.walletSC = config.walletSC;
     this.factoryAddress = config.walletConfig.factory.address;
-    this.entrypointSC = new ethers.Contract(config.walletConfig.entrypoint.address, config.walletConfig.entrypoint.abi, this.rpcProvider);
+    this.entrypointSC = new Contract(config.walletConfig.entrypoint.address, config.walletConfig.entrypoint.abi, this.rpcProvider);
     this.salt = <string>config.walletConfig.salt;
   }
 
   async buildOperation(operation: OperationParams): Promise<UserOperationData> {
-    const isDeployed = await this.isDeployed(this.walletSC.address);
+    const isDeployed = await this.isDeployed(await this.walletSC.getAddress());
 
     const block = await this.rpcProvider.getBlock('latest');
 
     const maxPriorityFeePerGas = 1_500_000_000; // fixme https://github.com/stackup-wallet/userop.js/blob/ef1a5fc368fd84422ee35a240b99aabae76c83e8/src/preset/middleware/gasPrice.ts#L4
-    const maxFeePerGas = Number(block.baseFeePerGas?.mul(2).add(maxPriorityFeePerGas).toString())
+    const maxFeePerGas = Number((<bigint>block?.baseFeePerGas) * BigInt(2) + BigInt(maxPriorityFeePerGas)).toString();
 
     // FIXME: clear callData if directly deploy wallet
     const op = {
       sender: operation.sender,
-      nonce: isDeployed ? await this.getNonce() : ethers.utils.hexlify(0),
+      nonce: isDeployed ? await this.getNonce() : toBeHex(0),
       initCode: isDeployed ? '0x': await this.getInitCode(),
       callData: operation.data,
 
-      maxFeePerGas: ethers.utils.hexlify(maxFeePerGas),
-      maxPriorityFeePerGas: ethers.utils.hexlify(maxPriorityFeePerGas),
+      maxFeePerGas: toBeHex(maxFeePerGas),
+      maxPriorityFeePerGas: toBeHex(maxPriorityFeePerGas),
 
       // TODO: calculate gas limits
-      callGasLimit: ethers.utils.hexlify(2_000_000),
-      verificationGasLimit: ethers.utils.hexlify(1_500_000),
-      preVerificationGas: ethers.utils.hexlify(1_000_000),
+      callGasLimit: toBeHex(2_000_000),
+      verificationGasLimit: toBeHex(1_500_000),
+      preVerificationGas: toBeHex(1_000_000),
 
       paymasterAndData: '0x',
       signature: '0x',
@@ -66,8 +66,7 @@ export class UserOperationBuilder {
   }
 
   private async getNonce(): Promise<string> {
-    const nonce: BigNumber = await this.walletSC['nonce']();
-    return nonce.toHexString();
+    return toBeHex(await this.walletSC['nonce']());
   }
 
   private async getInitCode(): Promise<string> {
@@ -79,7 +78,7 @@ export class UserOperationBuilder {
 
     const callData = encodeFunctionData(factoryABI, 'createWallet', args);
 
-    return ethers.utils.hexConcat([this.factoryAddress, callData]);
+    return concat([this.factoryAddress, callData]);
   }
 
   private async isDeployed(address: string): Promise<boolean> {
@@ -89,6 +88,6 @@ export class UserOperationBuilder {
 
   private async getSignature(userOperation: Partial<UserOperationData>): Promise<string> {
     const message = await this.entrypointSC['getUserOpHash'](userOperation);
-    return await this.owner.signMessage(ethers.utils.arrayify(message));
+    return await this.owner.signMessage(getBytes(message));
   }
 }

@@ -1,7 +1,7 @@
 import { BundlerMethods } from "./bundler-methods";
 import { UserOperationData } from "../user-operation-builder";
 import { BundlerError, BundlerErrorCodes } from "./bundler-error";
-import { ethers } from "ethers";
+import { getAddress } from "ethers";
 
 
 /**
@@ -32,7 +32,7 @@ export class BundlerClient {
 
   constructor(config: BundlerConfig) {
     this.bundlerUrl = config.url;
-    this.entrypoint = ethers.utils.getAddress(config.entrypoint);
+    this.entrypoint = getAddress(config.entrypoint);
   }
 
   /**

@@ -1,5 +1,15 @@
 import { TrueWalletConfig } from "./interfaces";
-import { Contract, ethers, Signer } from "ethers";
+import {
+  Addressable,
+  Contract,
+  formatEther, formatUnits,
+  JsonRpcProvider,
+  Mnemonic,
+  parseEther, parseUnits,
+  Signer,
+  solidityPackedKeccak256,
+  Wallet
+} from "ethers";
 import { Modules, TrueWalletErrorCodes } from "./constants";
 import { BalanceOfAbi, DecimalsAbi, TransferAbi, TrueWalletAbi, } from "./abis";
 import { UserOperationBuilder } from "./user-operation-builder";
@@ -13,7 +23,7 @@ import { SecurityControlModuleAbi } from "./abis/security-control-module-abi";
 
 
 export class TrueWalletSDK {
-  protected rpcProvider!: ethers.providers.JsonRpcProvider;
+  protected rpcProvider!: JsonRpcProvider;
   private config: TrueWalletConfig;
 
   protected factorySC!: Contract;
@@ -25,8 +35,8 @@ export class TrueWalletSDK {
   operationBuilder!: UserOperationBuilder;
   bundlerClient: BundlerClient;
 
-  get walletAddress(): string {
-    return this.walletSC.address;
+  get walletAddress(): Addressable {
+    return this.walletSC.target as Addressable;
   }
 
   constructor(c: Partial<TrueWalletConfig>) {
@@ -39,12 +49,12 @@ export class TrueWalletSDK {
       })
     }
 
-    this.rpcProvider = new ethers.providers.JsonRpcProvider(this.config.rpcProviderUrl);
+    this.rpcProvider = new JsonRpcProvider(this.config.rpcProviderUrl);
 
     const pk = this.getOwnerPk(this.config.salt);
-    this.owner = new ethers.Wallet(pk, this.rpcProvider);
+    this.owner = new Wallet(pk, this.rpcProvider);
 
-    this.factorySC = new ethers.Contract(this.config.factory.address, this.config.factory.abi, this.rpcProvider);
+    this.factorySC = new Contract(this.config.factory.address, this.config.factory.abi, this.owner);
 
     this.bundlerClient = new BundlerClient({
       url: this.config.bundleUrl,
@@ -54,7 +64,7 @@ export class TrueWalletSDK {
 
   async init(): Promise<TrueWalletSDK> {
     const walletAddress = await this.getWalletAddress();
-    this.walletSC = new ethers.Contract(walletAddress, TrueWalletAbi, this.owner);
+    this.walletSC = new Contract(walletAddress, TrueWalletAbi, this.owner);
 
     this.operationBuilder = new UserOperationBuilder({
       walletConfig: this.config,
@@ -84,38 +94,37 @@ export class TrueWalletSDK {
   }
 
   private getOwnerPk(salt: string): string {
-    const entropy = ethers.utils.solidityKeccak256(['string'], [salt]);
-    const mnemonic = ethers.utils.entropyToMnemonic(entropy);
-    const wallet = ethers.Wallet.fromMnemonic(mnemonic);
+    const entropy = solidityPackedKeccak256(['string'], [salt]);
+    const mnemonic = Mnemonic.entropyToPhrase(entropy);
+    const wallet = Wallet.fromPhrase(mnemonic);
     return wallet.privateKey;
   }
 
   async getBalance(): Promise<string> {
-    return this.rpcProvider.getBalance(this.walletSC.address).then((res) => {
-      return ethers.utils.formatEther(res);
-    });
+    const balance = await this.rpcProvider.getBalance(this.walletAddress);
+    return formatEther(balance)
   }
 
   async getERC20Balance(tokenAddress: string): Promise<string> {
-    const contract = new ethers.Contract(tokenAddress, [...BalanceOfAbi, ...DecimalsAbi], this.rpcProvider);
+    const contract = new Contract(tokenAddress, [...BalanceOfAbi, ...DecimalsAbi], this.rpcProvider);
 
     const decimals = await contract.decimals();
     const balance = await contract.balanceOf(this.walletSC.address);
 
-    return ethers.utils.formatUnits(balance, decimals);
+    return formatUnits(balance, decimals);
   }
 
   async send(recipient: string, amount: string): Promise<any> {
     const args = [
       recipient,
-      ethers.utils.parseEther(amount).toString(),
+      parseEther(amount),
       '0x',
     ];
 
     const data = encodeFunctionData(TrueWalletAbi, 'execute', args);
 
     const userOperation = await this.operationBuilder.buildOperation({
-      sender: this.walletSC.address,
+      sender: this.walletAddress,
       data
     });
 
@@ -123,22 +132,22 @@ export class TrueWalletSDK {
   }
 
   async sendErc20(recipient: string, amount: string, tokenAddress: string): Promise<any> {
-    const tokenContract = new ethers.Contract(tokenAddress, [...DecimalsAbi, ...TransferAbi], this.rpcProvider);
+    const tokenContract = new Contract(tokenAddress, [...DecimalsAbi, ...TransferAbi], this.rpcProvider);
     const decimals = await tokenContract.decimals();
 
     const txData = tokenContract.interface.encodeFunctionData('transfer', [
         recipient,
-        ethers.utils.parseUnits(amount, decimals),
+        parseUnits(amount, decimals),
       ]);
 
     const data = encodeFunctionData(TrueWalletAbi, 'execute', [
       tokenContract.address,
-      ethers.constants.Zero,
+      parseEther('0'),
       txData,
     ]);
 
     const userOperation = await this.operationBuilder.buildOperation({
-      sender: this.walletSC.address,
+      sender: this.walletAddress,
       data,
     });
 
@@ -155,7 +164,7 @@ export class TrueWalletSDK {
     const data = encodeFunctionData(this.config.factory.abi, 'createWallet', args);
 
     const userOperation = await this.operationBuilder.buildOperation({
-      sender: this.walletSC.address,
+      sender: this.walletAddress,
       data
     });
 
@@ -183,11 +192,11 @@ export class TrueWalletSDK {
     const moduleAddress = Modules[module];
     const data = encodeFunctionData(TrueWalletAbi, 'removeModule', [moduleAddress]);
 
-    const security = new ethers.Contract(Modules.SecurityControlModule, SecurityControlModuleAbi, this.owner);
+    const security = new Contract(Modules.SecurityControlModule, SecurityControlModuleAbi, this.owner);
     const txResponse = await security.execute(this.walletAddress, data);
 
     const txReceipt = await txResponse.wait();
-    return txReceipt.transactionHash;
+    return txReceipt.hash;
   }
 
   async getInstalledModules(): Promise<string[]> {

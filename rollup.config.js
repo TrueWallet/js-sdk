@@ -38,7 +38,7 @@ const config = [{
     }),
     commonjs({transformMixedEsModules: true}),
     typescript(),
-    // terser(),
+    terser(),
   ]
 }, {
   input: 'src/index.ts',

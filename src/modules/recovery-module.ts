@@ -1,4 +1,4 @@
-import { BigNumber, constants, Contract, ethers, providers, Signer } from "ethers";
+import { AbiCoder, Addressable, concat, Contract, Signer, solidityPackedKeccak256, toBeHex, ZeroHash } from "ethers";
 import { Modules } from "../constants";
 import { SocialRecoveryModuleAbi, TrueWalletAbi } from "../abis";
 import { encodeFunctionData } from "../utils";
@@ -14,39 +14,39 @@ export type RecoveryModuleData = {
 }
 
 export interface TrueWalletRecoveryModuleConfig {
-  walletAddress: string;
+  walletAddress: Addressable;
   operationBuilder: UserOperationBuilder;
   bundlerClient: BundlerClient;
   signer: Signer;
 }
 
 export const getRecoveryModuleInitData = (data: RecoveryModuleData): string => {
-  let callData = ethers.utils.defaultAbiCoder.encode(
+  let callData = AbiCoder.defaultAbiCoder().encode(
     ['address[]', 'uint256', 'bytes32'],
-    [data.guardians, data.threshold, ethers.constants.HashZero]
+    [data.guardians, data.threshold, ZeroHash]
   );
 
   const isAnonymous = !!data.anonymousGuardiansSalt;
 
   if (isAnonymous) {
-    const guardiansHash = ethers.utils.solidityKeccak256(
+    const guardiansHash = solidityPackedKeccak256(
       ['address[]', 'uint256'],
       [data.guardians, data.anonymousGuardiansSalt]
     );
 
-    callData = ethers.utils.defaultAbiCoder.encode(
+    callData = AbiCoder.defaultAbiCoder().encode(
       ['address[]', 'uint256', 'bytes32'],
       [[], data.threshold, guardiansHash]
     );
   }
 
-  return ethers.utils.hexConcat([Modules.SocialRecoveryModule, callData]);
+  return concat([Modules.SocialRecoveryModule, callData]);
 };
 
 
 export class TrueWalletRecoveryModule {
   private readonly signer: Signer;
-  private readonly walletAddress: string;
+  private readonly walletAddress: Addressable;
   private operationBuilder: UserOperationBuilder;
   bundlerClient: BundlerClient;
   recoveryModuleSC: Contract;
@@ -62,20 +62,21 @@ export class TrueWalletRecoveryModule {
   async install(data: RecoveryModuleData): Promise<string> {
     const recoveryInitData = getRecoveryModuleInitData(data);
 
-    const security = new ethers.Contract(Modules.SecurityControlModule, SecurityControlModuleAbi, this.signer);
+    const security = new Contract(Modules.SecurityControlModule, SecurityControlModuleAbi, this.signer);
     const txResponse = await security.execute(
       this.walletAddress,
       encodeFunctionData(TrueWalletAbi, 'addModule', [recoveryInitData]),
     );
     const txReceipt = await txResponse.wait();
-    return txReceipt.transactionHash;
+    return txReceipt.hash;
   }
 
   async getGuardians(): Promise<string[]> {
     return this.recoveryModuleSC['getGuardians'](this.walletAddress);
   }
 
-  async getGuardiansCount(): Promise<BigNumber> {
+  async getGuardiansCount(): Promise<bigint> {
+    // FIXME: check type
     return this.recoveryModuleSC['guardiansCount'](this.walletAddress);
   }
 
@@ -108,9 +109,8 @@ export class TrueWalletRecoveryModule {
     return this.recoveryModuleSC['getRecoveryEntry'](this.walletAddress);
   }
 
-  async nonce(): Promise<number> {
-    const nonce: BigNumber = await this.recoveryModuleSC['nonce'](this.walletAddress);
-    return nonce.toNumber();
+  async nonce(): Promise<bigint> {
+    return await this.recoveryModuleSC['nonce'](this.walletAddress);
   }
 
   async getSocialRecoveryHash(newOwners: string[]): Promise<string> {
@@ -118,9 +118,8 @@ export class TrueWalletRecoveryModule {
     return this.recoveryModuleSC['getSocialRecoveryHash'](this.walletAddress, newOwners, nonce);
   }
 
-  async getThreshold(): Promise<number> {
-    const threshold: BigNumber = await this.recoveryModuleSC['threshold'](this.walletAddress);
-    return threshold.toNumber();
+  async getThreshold(): Promise<bigint> {
+    return await this.recoveryModuleSC['threshold'](this.walletAddress);
   }
 
   /**
@@ -194,7 +193,7 @@ export class TrueWalletRecoveryModule {
     return this.executeFn(functionName, txData);
   }
 
-  private async executeFn(functionName: string, txData: string, payableAmount: BigNumber = constants.Zero): Promise<string> {
+  private async executeFn(functionName: string, txData: string, payableAmount = toBeHex(0)): Promise<string> {
     const callData = encodeFunctionData(TrueWalletAbi, 'execute', [
       Modules.SocialRecoveryModule,
       payableAmount,
