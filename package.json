@@ -35,5 +35,7 @@
   },
   "dependencies": {
     "ethers": "^6.9.2"
-  }
+  },
+  "types": "./dist/browser/es/index.d.ts",
+  "exports": ["./dist/browser/es/true-wallet-sdk.js"]
 }

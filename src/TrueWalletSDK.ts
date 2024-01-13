@@ -7,7 +7,7 @@ import {
   Mnemonic,
   parseEther, parseUnits,
   Signer,
-  solidityPackedKeccak256,
+  solidityPackedKeccak256, Typed,
   Wallet
 } from "ethers";
 import { Modules, TrueWalletErrorCodes } from "./constants";
@@ -109,7 +109,7 @@ export class TrueWalletSDK {
     const contract = new Contract(tokenAddress, [...BalanceOfAbi, ...DecimalsAbi], this.rpcProvider);
 
     const decimals = await contract.decimals();
-    const balance = await contract.balanceOf(this.walletSC.address);
+    const balance = await contract['balanceOf'](this.walletAddress);
 
     return formatUnits(balance, decimals);
   }
