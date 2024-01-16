@@ -1,5 +1,5 @@
 import { OperationParams, UserOperationData } from "./user-operation-data";
-import { concat, Contract, getBytes, JsonRpcProvider, Signer, toBeHex, } from "ethers";
+import { concat, Contract, getBytes, JsonRpcProvider, Signer, toBeHex, ZeroHash, } from "ethers";
 import { TrueWalletConfig } from "../interfaces";
 import { getCreateWalletArgs } from "../utils/get-create-account-args";
 import { encodeFunctionData } from "../utils";
@@ -35,14 +35,11 @@ export class UserOperationBuilder {
   async buildOperation(operation: OperationParams): Promise<UserOperationData> {
     const isDeployed = await this.isDeployed(await this.walletSC.getAddress());
 
-    const block = await this.rpcProvider.getBlock('latest');
-
-    const maxPriorityFeePerGas = 1_500_000_000; // fixme https://github.com/stackup-wallet/userop.js/blob/ef1a5fc368fd84422ee35a240b99aabae76c83e8/src/preset/middleware/gasPrice.ts#L4
-    const maxFeePerGas = Number((<bigint>block?.baseFeePerGas) * BigInt(2) + BigInt(maxPriorityFeePerGas)).toString();
+    const { maxFeePerGas, maxPriorityFeePerGas } = await this.getGasPrice();
 
     // FIXME: clear callData if directly deploy wallet
-    const op = {
-      sender: operation.sender,
+    const op: Partial<UserOperationData> = {
+      sender: operation.sender as string,
       nonce: isDeployed ? await this.getNonce() : toBeHex(0),
       initCode: isDeployed ? '0x': await this.getInitCode(),
       callData: operation.data,
@@ -50,19 +47,29 @@ export class UserOperationBuilder {
       maxFeePerGas: toBeHex(maxFeePerGas),
       maxPriorityFeePerGas: toBeHex(maxPriorityFeePerGas),
 
-      // TODO: calculate gas limits
-      callGasLimit: toBeHex(2_000_000),
-      verificationGasLimit: toBeHex(1_500_000),
-      preVerificationGas: toBeHex(1_000_000),
-
       paymasterAndData: '0x',
-      signature: '0x',
+      signature: await this.getDummySignature(),
     }
+
+    // FIXME: move to separate method and
+    //  use `eth_estimateUserOperationGas` with bundler client, not rpc provider
+    const est = await this.rpcProvider.send(
+      'eth_estimateUserOperationGas',
+      [op, this.trueWalletConfig.entrypoint.address]
+    );
+
+    op.preVerificationGas = est.preVerificationGas;
+    op.verificationGasLimit = est.verificationGasLimit ?? est.verificationGas;
+    op.callGasLimit = est.callGasLimit;
 
     return {
       ...op,
       signature: await this.getSignature(op),
-    };
+    } as UserOperationData;
+  }
+
+  private async getDummySignature(): Promise<string> {
+    return await this.owner.signMessage(getBytes('0xdead'));
   }
 
   private async getNonce(): Promise<string> {
@@ -79,6 +86,26 @@ export class UserOperationBuilder {
     const callData = encodeFunctionData(factoryABI, 'createWallet', args);
 
     return concat([this.factoryAddress, callData]);
+  }
+
+  private async getGasPrice(): Promise<{maxFeePerGas: bigint, maxPriorityFeePerGas: bigint }> {
+    /**
+     * https://github.com/stackup-wallet/userop.js/blob/ef1a5fc368fd84422ee35a240b99aabae76c83e8/src/preset/middleware/gasPrice.ts#L4
+     * */
+      // FIXME: refactor with rpcProvider.getFeeData()
+    const [fee, block] = await Promise.all([
+      this.rpcProvider.send("eth_maxPriorityFeePerGas", []),
+      this.rpcProvider.getBlock("latest"),
+    ]);
+
+    const tip = BigInt(fee);
+    const buffer = tip / BigInt(100)  * BigInt(13);
+    const maxPriorityFeePerGas = tip + buffer;
+    const maxFeePerGas = block?.baseFeePerGas
+      ? block.baseFeePerGas * BigInt(2) + maxPriorityFeePerGas
+      : maxPriorityFeePerGas;
+
+    return { maxFeePerGas, maxPriorityFeePerGas };
   }
 
   private async isDeployed(address: string): Promise<boolean> {

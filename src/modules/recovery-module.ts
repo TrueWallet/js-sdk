@@ -1,4 +1,4 @@
-import { AbiCoder, Addressable, concat, Contract, Signer, solidityPackedKeccak256, toBeHex, ZeroHash } from "ethers";
+import { AbiCoder, concat, Contract, Signer, solidityPackedKeccak256, toBeHex, ZeroHash } from "ethers";
 import { Modules } from "../constants";
 import { SocialRecoveryModuleAbi, TrueWalletAbi } from "../abis";
 import { encodeFunctionData } from "../utils";
@@ -14,7 +14,7 @@ export type RecoveryModuleData = {
 }
 
 export interface TrueWalletRecoveryModuleConfig {
-  walletAddress: Addressable;
+  walletAddress: string;
   operationBuilder: UserOperationBuilder;
   bundlerClient: BundlerClient;
   signer: Signer;
@@ -46,7 +46,7 @@ export const getRecoveryModuleInitData = (data: RecoveryModuleData): string => {
 
 export class TrueWalletRecoveryModule {
   private readonly signer: Signer;
-  private readonly walletAddress: Addressable;
+  private readonly walletAddress: string;
   private operationBuilder: UserOperationBuilder;
   bundlerClient: BundlerClient;
   recoveryModuleSC: Contract;

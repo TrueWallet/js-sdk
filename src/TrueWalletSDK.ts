@@ -1,13 +1,12 @@
 import { TrueWalletConfig } from "./interfaces";
 import {
-  Addressable,
   Contract,
   formatEther, formatUnits,
   JsonRpcProvider,
   Mnemonic,
   parseEther, parseUnits,
   Signer,
-  solidityPackedKeccak256, Typed,
+  solidityPackedKeccak256, toBeHex,
   Wallet
 } from "ethers";
 import { Modules, TrueWalletErrorCodes } from "./constants";
@@ -35,8 +34,8 @@ export class TrueWalletSDK {
   operationBuilder!: UserOperationBuilder;
   bundlerClient: BundlerClient;
 
-  get walletAddress(): Addressable {
-    return this.walletSC.target as Addressable;
+  get walletAddress(): string {
+    return this.walletSC.target as string;
   }
 
   constructor(c: Partial<TrueWalletConfig>) {
@@ -115,20 +114,7 @@ export class TrueWalletSDK {
   }
 
   async send(recipient: string, amount: string): Promise<any> {
-    const args = [
-      recipient,
-      parseEther(amount),
-      '0x',
-    ];
-
-    const data = encodeFunctionData(TrueWalletAbi, 'execute', args);
-
-    const userOperation = await this.operationBuilder.buildOperation({
-      sender: this.walletAddress,
-      data
-    });
-
-    return this.bundlerClient.sendUserOperation(userOperation);
+    return this.execute('0x', recipient, parseEther(amount).toString());
   }
 
   async sendErc20(recipient: string, amount: string, tokenAddress: string): Promise<any> {
@@ -136,22 +122,17 @@ export class TrueWalletSDK {
     const decimals = await tokenContract.decimals();
 
     const txData = tokenContract.interface.encodeFunctionData('transfer', [
-        recipient,
-        parseUnits(amount, decimals),
-      ]);
+      recipient,
+      parseUnits(amount, decimals),
+    ]);
 
     const data = encodeFunctionData(TrueWalletAbi, 'execute', [
-      tokenContract.address,
+      await tokenContract.getAddress(),
       parseEther('0'),
       txData,
     ]);
 
-    const userOperation = await this.operationBuilder.buildOperation({
-      sender: this.walletAddress,
-      data,
-    });
-
-    return this.bundlerClient.sendUserOperation(userOperation);
+    return this.buildAndSendOperation(data);
   }
 
   async deployWallet(): Promise<string> {
@@ -161,14 +142,32 @@ export class TrueWalletSDK {
       [],
     );
 
-    const data = encodeFunctionData(this.config.factory.abi, 'createWallet', args);
+    const executeData = encodeFunctionData(this.config.factory.abi, 'createWallet', args);
 
+    return this.buildAndSendOperation(executeData);
+  }
+
+  async execute(
+    payload: string,
+    target: string = this.walletAddress,
+    value: string = toBeHex(0)
+  ): Promise<string> {
+    const executeTxData = encodeFunctionData(
+      TrueWalletAbi,
+      'execute',
+      [ target, value, payload]
+    );
+
+    return this.buildAndSendOperation(executeTxData);
+  }
+
+  private async buildAndSendOperation(data: string): Promise<string> {
     const userOperation = await this.operationBuilder.buildOperation({
       sender: this.walletAddress,
-      data
+      data,
     });
 
-    return await this.bundlerClient.sendUserOperation(userOperation);
+    return this.bundlerClient.sendUserOperation(userOperation);
   }
 
   // MODULES
