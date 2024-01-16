@@ -4,9 +4,11 @@ import { TrueWalletConfig } from "../interfaces";
 import { getCreateWalletArgs } from "../utils/get-create-account-args";
 import { encodeFunctionData } from "../utils";
 import { factoryABI } from "../abis";
+import { BundlerClient } from "../bundler";
 
 export interface UserOperationBuilderConfig {
-  walletConfig: TrueWalletConfig
+  walletConfig: TrueWalletConfig;
+  bundlerClient: BundlerClient;
   rpcProvider: JsonRpcProvider;
   walletSC: Contract;
   owner: Signer;
@@ -14,6 +16,7 @@ export interface UserOperationBuilderConfig {
 
 export class UserOperationBuilder {
   private readonly trueWalletConfig: TrueWalletConfig;
+  private readonly bundlerClient: BundlerClient;
 
   owner: Signer;
   walletSC: Contract;
@@ -25,10 +28,11 @@ export class UserOperationBuilder {
   constructor(config: UserOperationBuilderConfig) {
     this.trueWalletConfig = config.walletConfig;
     this.rpcProvider = config.rpcProvider;
+    this.bundlerClient = config.bundlerClient;
     this.owner = config.owner;
     this.walletSC = config.walletSC;
     this.factoryAddress = config.walletConfig.factory.address;
-    this.entrypointSC = new Contract(config.walletConfig.entrypoint.address, config.walletConfig.entrypoint.abi, this.rpcProvider);
+    this.entrypointSC = new Contract(config.walletConfig.entrypoint.address, config.walletConfig.entrypoint.abi, this.owner);
     this.salt = <string>config.walletConfig.salt;
   }
 
@@ -51,21 +55,43 @@ export class UserOperationBuilder {
       signature: await this.getDummySignature(),
     }
 
-    // FIXME: move to separate method and
-    //  use `eth_estimateUserOperationGas` with bundler client, not rpc provider
-    const est = await this.rpcProvider.send(
-      'eth_estimateUserOperationGas',
-      [op, this.trueWalletConfig.entrypoint.address]
-    );
-
-    op.preVerificationGas = est.preVerificationGas;
-    op.verificationGasLimit = est.verificationGasLimit ?? est.verificationGas;
-    op.callGasLimit = est.callGasLimit;
+    const estimatedOperation = await this.getGasEstimation(op);
 
     return {
-      ...op,
-      signature: await this.getSignature(op),
+      ...estimatedOperation,
+      signature: await this.getSignature(estimatedOperation),
     } as UserOperationData;
+  }
+
+  private async getGasEstimation(userOperation: Partial<UserOperationData>): Promise<any> {
+    const est = await this.bundlerClient.estimateUserOperationGas(userOperation);
+
+    return {
+      ...userOperation,
+      preVerificationGas: est.preVerificationGas,
+      verificationGasLimit: est.verificationGasLimit ?? est.verificationGas,
+      callGasLimit: est.callGasLimit,
+    }
+  }
+
+  private async getGasPrice(): Promise<{maxFeePerGas: bigint, maxPriorityFeePerGas: bigint }> {
+    /**
+     * https://github.com/stackup-wallet/userop.js/blob/ef1a5fc368fd84422ee35a240b99aabae76c83e8/src/preset/middleware/gasPrice.ts#L4
+     * */
+    // FIXME: refactor with rpcProvider.getFeeData()
+    const [fee, block] = await Promise.all([
+      this.rpcProvider.send("eth_maxPriorityFeePerGas", []),
+      this.rpcProvider.getBlock("latest"),
+    ]);
+
+    const tip = BigInt(fee);
+    const buffer = tip / BigInt(100)  * BigInt(13);
+    const maxPriorityFeePerGas = tip + buffer;
+    const maxFeePerGas = block?.baseFeePerGas
+      ? block.baseFeePerGas * BigInt(2) + maxPriorityFeePerGas
+      : maxPriorityFeePerGas;
+
+    return { maxFeePerGas, maxPriorityFeePerGas };
   }
 
   private async getDummySignature(): Promise<string> {
@@ -86,26 +112,6 @@ export class UserOperationBuilder {
     const callData = encodeFunctionData(factoryABI, 'createWallet', args);
 
     return concat([this.factoryAddress, callData]);
-  }
-
-  private async getGasPrice(): Promise<{maxFeePerGas: bigint, maxPriorityFeePerGas: bigint }> {
-    /**
-     * https://github.com/stackup-wallet/userop.js/blob/ef1a5fc368fd84422ee35a240b99aabae76c83e8/src/preset/middleware/gasPrice.ts#L4
-     * */
-      // FIXME: refactor with rpcProvider.getFeeData()
-    const [fee, block] = await Promise.all([
-      this.rpcProvider.send("eth_maxPriorityFeePerGas", []),
-      this.rpcProvider.getBlock("latest"),
-    ]);
-
-    const tip = BigInt(fee);
-    const buffer = tip / BigInt(100)  * BigInt(13);
-    const maxPriorityFeePerGas = tip + buffer;
-    const maxFeePerGas = block?.baseFeePerGas
-      ? block.baseFeePerGas * BigInt(2) + maxPriorityFeePerGas
-      : maxPriorityFeePerGas;
-
-    return { maxFeePerGas, maxPriorityFeePerGas };
   }
 
   private async isDeployed(address: string): Promise<boolean> {

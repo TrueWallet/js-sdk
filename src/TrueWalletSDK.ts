@@ -68,6 +68,7 @@ export class TrueWalletSDK {
     this.operationBuilder = new UserOperationBuilder({
       walletConfig: this.config,
       rpcProvider: this.rpcProvider,
+      bundlerClient: this.bundlerClient,
       walletSC: this.walletSC,
       owner: this.owner,
     });

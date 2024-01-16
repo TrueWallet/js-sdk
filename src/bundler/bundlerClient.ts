@@ -20,6 +20,7 @@ export type GasEstimation = {
   preVerificationGas: number,
   // Fixme: Some property should be calculated depending on this value
   verificationGas: number,
+  verificationGasLimit?: number,
 }
 
 
@@ -45,7 +46,7 @@ export class BundlerClient {
     return await this.fetch(BundlerMethods.sendUserOperation, [operation, this.entrypoint]);
   }
 
-  estimateUserOperationGas(operation: UserOperationData): Promise<GasEstimation> {
+  estimateUserOperationGas(operation: Partial<UserOperationData>): Promise<GasEstimation> {
     return this.fetch<GasEstimation>(BundlerMethods.estimateUserOperationGas, [operation, this.entrypoint]);
   }
 
