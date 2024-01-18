@@ -8,4 +8,5 @@ export interface TrueWalletConfig {
   bundleUrl: string;
   network?: Network;
   salt?: string;
+  paymaster?: string;
 }

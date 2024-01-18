@@ -1,5 +1,12 @@
 import { OperationParams, UserOperationData } from "./user-operation-data";
-import { concat, Contract, getBytes, JsonRpcProvider, Signer, toBeHex, ZeroHash, } from "ethers";
+import {
+  concat,
+  Contract,
+  getBytes,
+  JsonRpcProvider,
+  Signer,
+  toBeHex,
+} from "ethers";
 import { TrueWalletConfig } from "../interfaces";
 import { getCreateWalletArgs } from "../utils/get-create-account-args";
 import { encodeFunctionData } from "../utils";
@@ -40,6 +47,7 @@ export class UserOperationBuilder {
     const isDeployed = await this.isDeployed(await this.walletSC.getAddress());
 
     const { maxFeePerGas, maxPriorityFeePerGas } = await this.getGasPrice();
+    const { paymaster } = this.trueWalletConfig;
 
     // FIXME: clear callData if directly deploy wallet
     const op: Partial<UserOperationData> = {
@@ -51,7 +59,7 @@ export class UserOperationBuilder {
       maxFeePerGas: toBeHex(maxFeePerGas),
       maxPriorityFeePerGas: toBeHex(maxPriorityFeePerGas),
 
-      paymasterAndData: '0x',
+      paymasterAndData: paymaster || '0x',
       signature: await this.getDummySignature(),
     }
 
