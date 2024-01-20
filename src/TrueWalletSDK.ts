@@ -114,11 +114,16 @@ export class TrueWalletSDK {
     return formatUnits(balance, decimals);
   }
 
-  async send(recipient: string, amount: string): Promise<any> {
-    return this.execute('0x', recipient, parseEther(amount).toString());
+  async send(recipient: string, amount: string, paymaster = '0x'): Promise<any> {
+    return this.execute('0x', recipient, parseEther(amount).toString(), paymaster);
   }
 
-  async sendErc20(recipient: string, amount: string, tokenAddress: string): Promise<any> {
+  async sendErc20(
+    recipient: string,
+    amount: string,
+    tokenAddress: string,
+    paymaster: string = '0x'
+  ): Promise<any> {
     const tokenContract = new Contract(tokenAddress, [...DecimalsAbi, ...TransferAbi], this.rpcProvider);
     const decimals = await tokenContract.decimals();
 
@@ -133,10 +138,10 @@ export class TrueWalletSDK {
       txData,
     ]);
 
-    return this.buildAndSendOperation(data);
+    return this.buildAndSendOperation(data, paymaster);
   }
 
-  async deployWallet(): Promise<string> {
+  async deployWallet(paymaster: string = '0x'): Promise<string> {
     const args = getCreateWalletArgs(
       this.config,
       await this.owner.getAddress(),
@@ -145,13 +150,14 @@ export class TrueWalletSDK {
 
     const executeData = encodeFunctionData(this.config.factory.abi, 'createWallet', args);
 
-    return this.buildAndSendOperation(executeData);
+    return this.buildAndSendOperation(executeData, paymaster);
   }
 
   async execute(
     payload: string,
     target: string = this.walletAddress,
-    value: string = toBeHex(0)
+    value: string = toBeHex(0),
+    paymaster: string = '0x',
   ): Promise<string> {
     const executeTxData = encodeFunctionData(
       TrueWalletAbi,
@@ -159,14 +165,14 @@ export class TrueWalletSDK {
       [ target, value, payload]
     );
 
-    return this.buildAndSendOperation(executeTxData);
+    return this.buildAndSendOperation(executeTxData, paymaster);
   }
 
-  private async buildAndSendOperation(data: string): Promise<string> {
+  private async buildAndSendOperation(data: string, paymaster: string): Promise<string> {
     const userOperation = await this.operationBuilder.buildOperation({
       sender: this.walletAddress,
       data,
-    });
+    }, paymaster);
 
     return this.bundlerClient.sendUserOperation(userOperation);
   }

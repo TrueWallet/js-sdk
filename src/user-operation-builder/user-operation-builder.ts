@@ -43,11 +43,10 @@ export class UserOperationBuilder {
     this.salt = <string>config.walletConfig.salt;
   }
 
-  async buildOperation(operation: OperationParams): Promise<UserOperationData> {
+  async buildOperation(operation: OperationParams, paymaster: string = '0x'): Promise<UserOperationData> {
     const isDeployed = await this.isDeployed(await this.walletSC.getAddress());
 
     const { maxFeePerGas, maxPriorityFeePerGas } = await this.getGasPrice();
-    const { paymaster } = this.trueWalletConfig;
 
     // FIXME: clear callData if directly deploy wallet
     const op: Partial<UserOperationData> = {
@@ -59,7 +58,7 @@ export class UserOperationBuilder {
       maxFeePerGas: toBeHex(maxFeePerGas),
       maxPriorityFeePerGas: toBeHex(maxPriorityFeePerGas),
 
-      paymasterAndData: paymaster || '0x',
+      paymasterAndData: paymaster,
       signature: await this.getDummySignature(),
     }
 
