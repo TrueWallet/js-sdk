@@ -105,6 +105,10 @@ export class TrueWalletSDK {
     return formatEther(balance)
   }
 
+  async getNonce(): Promise<bigint> {
+    return await this.walletSC['nonce']();
+  }
+
   async getERC20Balance(tokenAddress: string): Promise<string> {
     const contract = new Contract(tokenAddress, [...BalanceOfAbi, ...DecimalsAbi], this.rpcProvider);
 
