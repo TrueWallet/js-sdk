@@ -21,6 +21,11 @@ import defaultOptions from "./constants/default-options";
 import { SecurityControlModuleAbi } from "./abis/security-control-module-abi";
 
 
+/*
+* TODO:
+*  - check if wallet is deployed
+* */
+
 export class TrueWalletSDK {
   protected rpcProvider!: JsonRpcProvider;
   private config: TrueWalletConfig;
@@ -39,12 +44,15 @@ export class TrueWalletSDK {
   }
 
   constructor(c: Partial<TrueWalletConfig>) {
-    this.config = Object.assign(defaultOptions, c);
+    this.config = Object.assign(defaultOptions, c) as TrueWalletConfig;
 
-    if (!this.config.salt) {
+    const requiredParams = ['rpcProviderUrl', 'salt', 'bundlerUrl'];
+    const isConfigValid = requiredParams.every((param) => this.config.hasOwnProperty(param));
+
+    if (!isConfigValid) {
       throw new TrueWalletError({
         code: TrueWalletErrorCodes.CONFIG_ERROR,
-        message: `Parameter 'salt' is required in config.`,
+        message: `Parameters 'rpcProviderUrl', 'salt', 'bundlerUrl' are required in config.`,
       })
     }
 
@@ -56,7 +64,7 @@ export class TrueWalletSDK {
     this.factorySC = new Contract(this.config.factory.address, this.config.factory.abi, this.owner);
 
     this.bundlerClient = new BundlerClient({
-      url: this.config.bundleUrl,
+      url: this.config.bundlerUrl,
       entrypoint: this.config.entrypoint.address
     });
   }
@@ -112,10 +120,17 @@ export class TrueWalletSDK {
   async getERC20Balance(tokenAddress: string): Promise<string> {
     const contract = new Contract(tokenAddress, [...BalanceOfAbi, ...DecimalsAbi], this.rpcProvider);
 
-    const decimals = await contract.decimals();
-    const balance = await contract['balanceOf'](this.walletAddress);
+    try {
+      const decimals = await contract.decimals();
+      const balance = await contract['balanceOf'](this.walletAddress);
 
-    return formatUnits(balance, decimals);
+      return formatUnits(balance, decimals);
+    } catch (err: any) {
+      throw new TrueWalletError({
+        code: TrueWalletErrorCodes.CALL_EXCEPTION,
+        message: err.message,
+      });
+    }
   }
 
   async send(recipient: string, amount: string, paymaster = '0x'): Promise<any> {

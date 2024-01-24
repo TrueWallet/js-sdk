@@ -6,7 +6,10 @@ export interface TrueWalletErrorConfig {
 }
 
 export class TrueWalletError extends Error {
+  code: TrueWalletErrorCodes;
+
   constructor(error: TrueWalletErrorConfig) {
     super(error.message);
+    this.code = error.code;
   }
 }
