@@ -8,7 +8,10 @@ export type BundlerErrorConfig = {
 };
 
 export class BundlerError extends Error {
+  code: BundlerErrorCodes;
+
   constructor(error: BundlerErrorConfig) {
     super(error.message);
+    this.code = error.code;
   }
 }

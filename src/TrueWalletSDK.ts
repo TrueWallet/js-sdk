@@ -1,11 +1,11 @@
-import { TrueWalletConfig } from "./interfaces";
+import { SendErc20Params, SendParams, TrueWalletConfig } from "./interfaces";
 import {
+  concat,
   Contract,
   formatEther, formatUnits,
   JsonRpcProvider,
   Mnemonic,
   parseEther, parseUnits,
-  Signer,
   solidityPackedKeccak256, toBeHex,
   Wallet
 } from "ethers";
@@ -14,37 +14,32 @@ import { BalanceOfAbi, DecimalsAbi, TransferAbi, TrueWalletAbi, } from "./abis";
 import { UserOperationBuilder } from "./user-operation-builder";
 import { TrueWalletError, TrueWalletModules } from "./types";
 import { BundlerClient } from "./bundler";
-import { encodeFunctionData } from "./utils";
-import { getCreateWalletArgs } from "./utils/get-create-account-args";
+import { encodeFunctionData, isContract, getCreateWalletArgs } from "./utils";
 import { TrueWalletRecoveryModule } from "./modules";
 import defaultOptions from "./constants/default-options";
-import { SecurityControlModuleAbi } from "./abis/security-control-module-abi";
-
-
-/*
-* TODO:
-*  - check if wallet is deployed
-* */
+import { onlyOwner, walletReady } from "./decorators";
 
 export class TrueWalletSDK {
-  protected rpcProvider!: JsonRpcProvider;
-  private config: TrueWalletConfig;
+  private ready: boolean = false;
+  private readonly config: TrueWalletConfig;
 
-  protected factorySC!: Contract;
+  readonly signer: Wallet;
+  readonly rpcProvider!: JsonRpcProvider;
+
+  private readonly factorySC: Contract;
   private walletSC!: Contract;
-  private owner!: Signer;
 
   private socialRecoveryModule: TrueWalletRecoveryModule | null = null;
 
   operationBuilder!: UserOperationBuilder;
   bundlerClient: BundlerClient;
 
-  get walletAddress(): string {
+  get address(): string {
     return this.walletSC.target as string;
   }
 
   constructor(c: Partial<TrueWalletConfig>) {
-    this.config = Object.assign(defaultOptions, c) as TrueWalletConfig;
+    this.config = Object.assign({}, defaultOptions, c) as TrueWalletConfig;
 
     const requiredParams = ['rpcProviderUrl', 'salt', 'bundlerUrl'];
     const isConfigValid = requiredParams.every((param) => this.config.hasOwnProperty(param));
@@ -59,9 +54,9 @@ export class TrueWalletSDK {
     this.rpcProvider = new JsonRpcProvider(this.config.rpcProviderUrl);
 
     const pk = this.getOwnerPk(this.config.salt);
-    this.owner = new Wallet(pk, this.rpcProvider);
+    this.signer = new Wallet(pk, this.rpcProvider);
 
-    this.factorySC = new Contract(this.config.factory.address, this.config.factory.abi, this.owner);
+    this.factorySC = new Contract(this.config.factory.address, this.config.factory.abi, this.signer);
 
     this.bundlerClient = new BundlerClient({
       url: this.config.bundlerUrl,
@@ -71,21 +66,18 @@ export class TrueWalletSDK {
 
   async init(): Promise<TrueWalletSDK> {
     const walletAddress = await this.getWalletAddress();
-    this.walletSC = new Contract(walletAddress, TrueWalletAbi, this.owner);
+    this.walletSC = new Contract(walletAddress, TrueWalletAbi, this.signer);
+    this.ready = await this.isWalletReady()
 
     this.operationBuilder = new UserOperationBuilder({
       walletConfig: this.config,
       rpcProvider: this.rpcProvider,
       bundlerClient: this.bundlerClient,
-      walletSC: this.walletSC,
-      owner: this.owner,
+      signer: this.signer,
     });
 
     this.socialRecoveryModule = new TrueWalletRecoveryModule({
-      walletAddress: this.walletAddress,
-      operationBuilder: this.operationBuilder,
-      bundlerClient: this.bundlerClient,
-      signer: this.owner,
+      wallet: this,
     });
 
     return this;
@@ -94,7 +86,7 @@ export class TrueWalletSDK {
   private async getWalletAddress(): Promise<string> {
     const args = getCreateWalletArgs(
       this.config,
-      await this.owner.getAddress(),
+      await this.signer.getAddress(),
       [],
     );
 
@@ -108,21 +100,50 @@ export class TrueWalletSDK {
     return wallet.privateKey;
   }
 
+  /**
+   * Get balance of the wallet in native currency
+   * @method getBalance
+   * @returns {Promise<string>} - balance of the wallet in ether unit
+   *
+   * @example
+   * const wallet = new TrueWalletSDK({ ... });
+   * await wallet.getBalance();
+   * */
   async getBalance(): Promise<string> {
-    const balance = await this.rpcProvider.getBalance(this.walletAddress);
+    const balance = await this.rpcProvider.getBalance(this.address);
     return formatEther(balance)
   }
 
+  /**
+   * Get nonce of the wallet
+   * @method getNonce
+   * @returns {Promise<bigint>} - nonce of the wallet
+   *
+   * @example
+   * const wallet = new TrueWalletSDK({ ... });
+   * await wallet.getNonce();
+   * */
+  @walletReady
   async getNonce(): Promise<bigint> {
     return await this.walletSC['nonce']();
   }
 
+  /**
+   * Get ERC20 token balance
+   * @method getERC20Balance
+   * @param {string} tokenAddress - ERC20 token contract address
+   * @returns {Promise<string>} - token balance in ether unit
+   *
+   * @example
+   * const wallet = new TrueWalletSDK({ ... });
+   * await wallet.getERC20Balance('0x...');
+   * */
   async getERC20Balance(tokenAddress: string): Promise<string> {
     const contract = new Contract(tokenAddress, [...BalanceOfAbi, ...DecimalsAbi], this.rpcProvider);
 
     try {
       const decimals = await contract.decimals();
-      const balance = await contract['balanceOf'](this.walletAddress);
+      const balance = await contract['balanceOf'](this.address);
 
       return formatUnits(balance, decimals);
     } catch (err: any) {
@@ -133,22 +154,53 @@ export class TrueWalletSDK {
     }
   }
 
-  async send(recipient: string, amount: string, paymaster = '0x'): Promise<any> {
-    return this.execute('0x', recipient, parseEther(amount).toString(), paymaster);
+  /**
+   * Send native currency to recipient
+   * @method send
+   * @param {Object} params
+   * @param {string} params.to - recipient address
+   * @param {string | number} params.amount - amount to send in ether unit
+   * @param {string} [paymaster=0x] - paymaster address (optional)
+   * @returns {Promise<string>} - User Operation hash
+   *
+   * @example
+   * const wallet = new TrueWalletSDK({ ... });
+   * await wallet.send({
+   *   to: '0x...',
+   *   amount: '0.1',
+   * });
+   * */
+  @onlyOwner
+  async send(params: SendParams, paymaster = '0x'): Promise<any> {
+    return this.execute('0x', params.to, parseEther(params.amount.toString()).toString(), paymaster);
   }
 
-  async sendErc20(
-    recipient: string,
-    amount: string,
-    tokenAddress: string,
-    paymaster: string = '0x'
-  ): Promise<any> {
-    const tokenContract = new Contract(tokenAddress, [...DecimalsAbi, ...TransferAbi], this.rpcProvider);
+  /**
+   * Send ERC20 token to recipient
+   * @method sendErc20
+   * @param {Object} params
+   * @param {string} params.to - recipient address
+   * @param {string | number} params.amount - amount to send in ether unit
+   * @param {string} params.tokenAddress - ERC20 token contract address
+   * @param {string} [paymaster=0x] - paymaster contract address (optional)
+   * @returns {Promise<string>} - User Operation hash
+   *
+   * @example
+   * const wallet = new TrueWalletSDK({ ... });
+   * await wallet.sendErc20({
+   *   to: '0x...',
+   *   amount: '0.1',
+   *   tokenAddress: '0x...',
+   * });
+   * */
+  @onlyOwner
+  async sendErc20(params: SendErc20Params, paymaster: string = '0x'): Promise<any> {
+    const tokenContract = new Contract(params.tokenAddress, [...DecimalsAbi, ...TransferAbi], this.rpcProvider);
     const decimals = await tokenContract.decimals();
 
     const txData = tokenContract.interface.encodeFunctionData('transfer', [
-      recipient,
-      parseUnits(amount, decimals),
+      params.to,
+      parseUnits(params.amount.toString(), decimals),
     ]);
 
     const data = encodeFunctionData(TrueWalletAbi, 'execute', [
@@ -160,21 +212,15 @@ export class TrueWalletSDK {
     return this.buildAndSendOperation(data, paymaster);
   }
 
+  @onlyOwner
   async deployWallet(paymaster: string = '0x'): Promise<string> {
-    const args = getCreateWalletArgs(
-      this.config,
-      await this.owner.getAddress(),
-      [],
-    );
-
-    const executeData = encodeFunctionData(this.config.factory.abi, 'createWallet', args);
-
-    return this.buildAndSendOperation(executeData, paymaster);
+    return this.buildAndSendOperation('0x', paymaster);
   }
 
+  @onlyOwner
   async execute(
     payload: string,
-    target: string = this.walletAddress,
+    target: string = this.address,
     value: string = toBeHex(0),
     paymaster: string = '0x',
   ): Promise<string> {
@@ -188,20 +234,44 @@ export class TrueWalletSDK {
   }
 
   private async buildAndSendOperation(data: string, paymaster: string): Promise<string> {
+    let nonce;
+
+    try {
+      nonce = await this.getNonce();
+    } catch (err) {
+      nonce = 0;
+    }
+
     const userOperation = await this.operationBuilder.buildOperation({
-      sender: this.walletAddress,
-      data,
+      sender: this.address,
+      callData: data,
+      initCode: await this.getInitCode(),
+      nonce: toBeHex(nonce),
     }, paymaster);
 
     return this.bundlerClient.sendUserOperation(userOperation);
   }
 
+  private async getInitCode(): Promise<string> {
+    if(this.ready) {
+      return '0x';
+    }
+
+    const args = getCreateWalletArgs(
+      this.config,
+      this.signer.address,
+      []
+    );
+
+    const callData = encodeFunctionData(this.config.factory.abi, 'createWallet', args);
+    return concat([this.config.factory.address, callData]);
+  }
+
   // MODULES
+  @onlyOwner
   async installModule(module: TrueWalletModules, moduleData: any): Promise<string> {
     const moduleAddress = Modules[module];
 
-    // TODO: check if security module is already installed, throw error if not
-    // TODO: check if module is already installed
     switch (moduleAddress) {
       case Modules.SocialRecoveryModule:
         return await (<TrueWalletRecoveryModule>this.socialRecoveryModule).install(moduleData);
@@ -213,17 +283,23 @@ export class TrueWalletSDK {
     }
   }
 
+  @onlyOwner
   async removeModule(module: TrueWalletModules): Promise<string> {
     const moduleAddress = Modules[module];
-    const data = encodeFunctionData(TrueWalletAbi, 'removeModule', [moduleAddress]);
 
-    const security = new Contract(Modules.SecurityControlModule, SecurityControlModuleAbi, this.owner);
-    const txResponse = await security.execute(this.walletAddress, data);
-
-    const txReceipt = await txResponse.wait();
-    return txReceipt.hash;
+    switch (moduleAddress) {
+      case Modules.SocialRecoveryModule:
+        return (<TrueWalletRecoveryModule>this.socialRecoveryModule).remove();
+      default:
+        throw new TrueWalletError({
+          code: TrueWalletErrorCodes.MODULE_NOT_SUPPORTED,
+          message: `Module ${module} is not supported`,
+        });
+    }
   }
 
+
+  @walletReady
   async getInstalledModules(): Promise<string[]> {
     return this.walletSC['listModules']();
   }
@@ -232,7 +308,12 @@ export class TrueWalletSDK {
     return Modules[module];
   }
 
+  @walletReady
   async isWalletOwner(address: string): Promise<boolean> {
     return this.walletSC['isOwner'](address);
+  }
+
+  private async isWalletReady(): Promise<boolean> {
+    return isContract(this.address, this.rpcProvider);
   }
 }

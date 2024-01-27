@@ -7,8 +7,8 @@ import 'cross-fetch/polyfill';
 
 /**
  * @type BundlerConfig - parameters for bundler client
- * @param url - the url of the bundler server
- * @param entrypoint - the address of the entrypoint smart contract
+ * @param {string} url - the url of the bundler server
+ * @param {string} entrypoint - the address of the entrypoint smart contract
  * */
 export type BundlerConfig = {
   url: string,
@@ -39,8 +39,8 @@ export class BundlerClient {
 
   /**
    * @method sendUserOperation - send user operation to the bundler server
-   * @param operation - user operation data
-   * @returns Promise<string> - userOperationHash
+   * @param {UserOperationData} operation - user operation data
+   * @returns {string} Promise<string> - userOperationHash
    * */
   async sendUserOperation(operation : UserOperationData): Promise<string> {
     return await this.fetch(BundlerMethods.sendUserOperation, [operation, this.entrypoint]);
@@ -65,7 +65,6 @@ export class BundlerClient {
   protected async fetch<T>(method: BundlerMethods, data: any[], options: RequestInit = {}): Promise<T> {
     const body: BodyInit = JSON.stringify({
       jsonrpc: '2.0',
-      // TODO: check logic,
       id: this.getId(),
       method: method,
       params: data,
@@ -79,7 +78,7 @@ export class BundlerClient {
       }
     }
 
-    const res = await fetch(this.bundlerUrl, Object.assign(defaultOptions, options)).then((res) => res.json());
+    const res = await fetch(this.bundlerUrl, Object.assign({}, defaultOptions, options)).then((res) => res.json());
 
     if (res.error) {
       throw new BundlerError({

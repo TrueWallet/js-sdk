@@ -1,6 +1,5 @@
 import { TrueWalletConfig } from "../interfaces";
-import { factoryABI } from "../abis/factory-abi";
-import { entrypointABI } from "../abis/entrypoint-abi";
+import { factoryABI, entrypointABI } from "../abis";
 
 const defaultOptions: Partial<TrueWalletConfig> = {
   factory: {

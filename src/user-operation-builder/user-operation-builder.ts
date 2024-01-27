@@ -1,6 +1,5 @@
 import { OperationParams, UserOperationData } from "./user-operation-data";
 import {
-  concat,
   Contract,
   getBytes,
   JsonRpcProvider,
@@ -8,55 +7,44 @@ import {
   toBeHex,
 } from "ethers";
 import { TrueWalletConfig } from "../interfaces";
-import { getCreateWalletArgs } from "../utils/get-create-account-args";
-import { encodeFunctionData } from "../utils";
-import { factoryABI } from "../abis";
 import { BundlerClient } from "../bundler";
 
 export interface UserOperationBuilderConfig {
   walletConfig: TrueWalletConfig;
   bundlerClient: BundlerClient;
   rpcProvider: JsonRpcProvider;
-  walletSC: Contract;
-  owner: Signer;
+  signer: Signer;
 }
 
 export class UserOperationBuilder {
-  private readonly trueWalletConfig: TrueWalletConfig;
   private readonly bundlerClient: BundlerClient;
 
-  owner: Signer;
-  walletSC: Contract;
+  signer: Signer;
   entrypointSC: Contract;
   rpcProvider: JsonRpcProvider;
-  salt: string;
-  factoryAddress: string;
 
   constructor(config: UserOperationBuilderConfig) {
-    this.trueWalletConfig = config.walletConfig;
     this.rpcProvider = config.rpcProvider;
     this.bundlerClient = config.bundlerClient;
-    this.owner = config.owner;
-    this.walletSC = config.walletSC;
-    this.factoryAddress = config.walletConfig.factory.address;
-    this.entrypointSC = new Contract(config.walletConfig.entrypoint.address, config.walletConfig.entrypoint.abi, this.owner);
-    this.salt = <string>config.walletConfig.salt;
+    this.signer = config.signer;
+    this.entrypointSC = new Contract(config.walletConfig.entrypoint.address, config.walletConfig.entrypoint.abi, this.signer);
   }
 
   async buildOperation(operation: OperationParams, paymaster: string = '0x'): Promise<UserOperationData> {
-    const isDeployed = await this.isDeployed(await this.walletSC.getAddress());
-
     const { maxFeePerGas, maxPriorityFeePerGas } = await this.getGasPrice();
 
-    // FIXME: clear callData if directly deploy wallet
     const op: Partial<UserOperationData> = {
       sender: operation.sender as string,
-      nonce: isDeployed ? await this.getNonce() : toBeHex(0),
-      initCode: isDeployed ? '0x': await this.getInitCode(),
-      callData: operation.data,
+      nonce: operation.nonce,
+      initCode: operation.initCode,
+      callData: operation.callData,
 
       maxFeePerGas: toBeHex(maxFeePerGas),
       maxPriorityFeePerGas: toBeHex(maxPriorityFeePerGas),
+
+      preVerificationGas: toBeHex(0),
+      verificationGasLimit: toBeHex(0),
+      callGasLimit: toBeHex(0),
 
       paymasterAndData: paymaster,
       signature: await this.getDummySignature(),
@@ -102,32 +90,11 @@ export class UserOperationBuilder {
   }
 
   private async getDummySignature(): Promise<string> {
-    return await this.owner.signMessage(getBytes('0xdead'));
-  }
-
-  private async getNonce(): Promise<string> {
-    return toBeHex(await this.walletSC['nonce']());
-  }
-
-  private async getInitCode(): Promise<string> {
-    const args = getCreateWalletArgs(
-      this.trueWalletConfig,
-      await this.owner.getAddress(),
-      []
-    );
-
-    const callData = encodeFunctionData(factoryABI, 'createWallet', args);
-
-    return concat([this.factoryAddress, callData]);
-  }
-
-  private async isDeployed(address: string): Promise<boolean> {
-    const code = await this.rpcProvider.getCode(address);
-    return code !== '0x';
+    return await this.signer.signMessage(getBytes('0xdead'));
   }
 
   private async getSignature(userOperation: Partial<UserOperationData>): Promise<string> {
     const message = await this.entrypointSC['getUserOpHash'](userOperation);
-    return await this.owner.signMessage(getBytes(message));
+    return await this.signer.signMessage(getBytes(message));
   }
 }

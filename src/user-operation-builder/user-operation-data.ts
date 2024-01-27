@@ -1,6 +1,8 @@
 export interface OperationParams {
   sender: string;
-  data: string;
+  callData: string;
+  initCode: string;
+  nonce: string;
 }
 
 export interface UserOperationData {
