@@ -14,6 +14,6 @@ export const walletReady = (originalMethod: any, _context: any) => {
       }
     }
 
-    return  originalMethod.call(this, ...args);
+    return originalMethod.call(this, ...args);
   }
 }

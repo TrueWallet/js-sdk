@@ -1,44 +1,43 @@
-import { SendErc20Params, SendParams, TrueWalletConfig } from "./interfaces";
+import { SendErc20Params, SendParams, TrueWalletConfig, TrueWalletSigner } from "./interfaces";
 import {
   concat,
   Contract,
   formatEther, formatUnits,
   JsonRpcProvider,
-  Mnemonic,
-  parseEther, parseUnits,
-  solidityPackedKeccak256, toBeHex,
-  Wallet
+  parseEther, parseUnits, toBeHex
 } from "ethers";
 import { Modules, SmartContracts, TrueWalletErrorCodes } from "./constants";
 import { BalanceOfAbi, DecimalsAbi, entrypointABI, factoryABI, TransferAbi, TrueWalletAbi, } from "./abis";
 import { UserOperationBuilder } from "./user-operation-builder";
 import { TrueWalletError, TrueWalletModules } from "./types";
 import { BundlerClient } from "./bundler";
-import { encodeFunctionData, isContract, getCreateWalletArgs } from "./utils";
+import { encodeFunctionData, isContract, getCreateWalletArgs, getSigner } from "./utils";
 import { TrueWalletRecoveryModule } from "./modules";
 import { onlyOwner, walletReady } from "./decorators";
 
 export class TrueWalletSDK {
   private ready: boolean = false;
 
-  readonly signer: Wallet;
-  readonly rpcProvider!: JsonRpcProvider;
+  private signer!: TrueWalletSigner;
+  rpcProvider!: JsonRpcProvider;
 
-  private readonly factorySC: Contract;
-  private readonly entrypointSC: Contract;
+  private factorySC!: Contract;
+  private entrypointSC!: Contract;
   private walletSC!: Contract;
 
   private socialRecoveryModule: TrueWalletRecoveryModule | null = null;
 
   operationBuilder!: UserOperationBuilder;
-  bundlerClient: BundlerClient;
+  bundlerClient!: BundlerClient;
 
   get address(): string {
     return this.walletSC.target as string;
   }
 
-  constructor(config: TrueWalletConfig) {
-    const requiredParams = ['rpcProviderUrl', 'salt', 'bundlerUrl'];
+  constructor() {}
+
+  async init(config: TrueWalletConfig): Promise<TrueWalletSDK> {
+    const requiredParams = ['rpcProviderUrl', 'signer', 'bundlerUrl'];
     const isConfigValid = requiredParams.every((param) => config.hasOwnProperty(param));
 
     if (!isConfigValid) {
@@ -50,9 +49,6 @@ export class TrueWalletSDK {
 
     this.rpcProvider = new JsonRpcProvider(config.rpcProviderUrl);
 
-    const pk = this.getOwnerPk(config.salt);
-    this.signer = new Wallet(pk, this.rpcProvider);
-
     this.factorySC = new Contract(SmartContracts.Factory, factoryABI, this.rpcProvider);
     this.entrypointSC = new Contract(SmartContracts.Entrypoint, entrypointABI, this.rpcProvider);
 
@@ -60,12 +56,12 @@ export class TrueWalletSDK {
       url: config.bundlerUrl,
       entrypoint: this.entrypointSC.target as string,
     });
-  }
 
-  async init(): Promise<TrueWalletSDK> {
+    this.signer = await getSigner(config.signer);
+
     // FIXME: hardcoded wallet idx
     const walletAddress = await this.getWalletAddress(0);
-    this.walletSC = new Contract(walletAddress, TrueWalletAbi, this.signer);
+    this.walletSC = new Contract(walletAddress, TrueWalletAbi, this.rpcProvider);
     this.ready = await this.isWalletReady()
 
     this.operationBuilder = new UserOperationBuilder({
@@ -86,18 +82,11 @@ export class TrueWalletSDK {
     const args = getCreateWalletArgs(
       idx,
       this.entrypointSC.target as string,
-      await this.signer.getAddress(),
+      this.signer.address,
       [],
     );
 
     return this.factorySC['getWalletAddress'](...args);
-  }
-
-  private getOwnerPk(salt: string): string {
-    const entropy = solidityPackedKeccak256(['string'], [salt]);
-    const mnemonic = Mnemonic.entropyToPhrase(entropy);
-    const wallet = Wallet.fromPhrase(mnemonic);
-    return wallet.privateKey;
   }
 
   /**

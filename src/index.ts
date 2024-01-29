@@ -9,5 +9,5 @@ export * from './modules';
 export { encodeFunctionData } from './utils';
 
 export async function init(config: TrueWalletConfig): Promise<TrueWalletSDK> {
-  return await new TrueWalletSDK(config).init();
+  return await new TrueWalletSDK().init(config);
 }

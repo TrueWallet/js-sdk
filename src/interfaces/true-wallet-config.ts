@@ -1,5 +1,7 @@
+import { TrueWalletSignerConfig } from "./true-wallet-signer-config";
+
 export interface TrueWalletConfig {
   rpcProviderUrl: string;
   bundlerUrl: string;
-  salt: string;
+  signer: TrueWalletSignerConfig;
 }

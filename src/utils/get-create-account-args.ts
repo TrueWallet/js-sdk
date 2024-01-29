@@ -1,6 +1,5 @@
 import { AbiCoder, concat, solidityPackedKeccak256 } from "ethers";
 import { Modules } from "../constants";
-import { TrueWalletConfig } from "../interfaces";
 
 export const getCreateWalletArgs = (
   walletIndex: number,

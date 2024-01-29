@@ -3,7 +3,6 @@ import {
   concat,
   Contract,
   encodeBytes32String,
-  Signer,
   solidityPackedKeccak256,
   toBeHex,
   ZeroHash
@@ -11,8 +10,6 @@ import {
 import { Modules, TrueWalletErrorCodes } from "../../constants";
 import { SocialRecoveryModuleAbi, TrueWalletAbi } from "../../abis";
 import { encodeFunctionData } from "../../utils";
-import { UserOperationBuilder } from "../../user-operation-builder";
-import { BundlerClient } from "../../bundler";
 import { SecurityControlModuleAbi } from "../../abis/security-control-module-abi";
 import { TrueWalletError } from "../../types";
 import { RecoveryError, RecoveryErrorCodes } from "./recovery-module-errors";
@@ -62,8 +59,8 @@ export class TrueWalletRecoveryModule {
 
   constructor(config: TrueWalletRecoveryModuleConfig) {
     this.wallet = config.wallet;
-    this.recoveryModuleSC = new Contract(Modules.SocialRecoveryModule, SocialRecoveryModuleAbi, this.wallet.signer);
-    this.securityControlModuleSC = new Contract(Modules.SecurityControlModule, SecurityControlModuleAbi, this.wallet.signer);
+    this.recoveryModuleSC = new Contract(Modules.SocialRecoveryModule, SocialRecoveryModuleAbi, this.wallet.rpcProvider);
+    this.securityControlModuleSC = new Contract(Modules.SecurityControlModule, SecurityControlModuleAbi, this.wallet.rpcProvider);
   }
 
   async install(data: RecoveryModuleData): Promise<string> {
