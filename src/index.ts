@@ -8,6 +8,6 @@ export * from './interfaces';
 export * from './modules';
 export { encodeFunctionData } from './utils';
 
-export async function init(config: Partial<TrueWalletConfig>): Promise<TrueWalletSDK> {
+export async function init(config: TrueWalletConfig): Promise<TrueWalletSDK> {
   return await new TrueWalletSDK(config).init();
 }

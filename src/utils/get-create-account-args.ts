@@ -3,20 +3,21 @@ import { Modules } from "../constants";
 import { TrueWalletConfig } from "../interfaces";
 
 export const getCreateWalletArgs = (
-  config: TrueWalletConfig,
+  walletIndex: number,
+  entrypoint: string,
   owner: string,
-  modules: string[]
+  modules: string[],
 ): any[] => {
 
   const securityInitData = getSecurityModuleInitData();
   return [
-    config.entrypoint.address,
+    entrypoint,
     owner,
     [
       securityInitData,
       ...modules,
     ],
-    solidityPackedKeccak256(['string'], [config.salt])
+    solidityPackedKeccak256(['string'], [walletIndex.toString()]),
   ];
 }
 

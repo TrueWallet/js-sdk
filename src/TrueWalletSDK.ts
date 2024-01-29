@@ -9,24 +9,23 @@ import {
   solidityPackedKeccak256, toBeHex,
   Wallet
 } from "ethers";
-import { Modules, TrueWalletErrorCodes } from "./constants";
-import { BalanceOfAbi, DecimalsAbi, TransferAbi, TrueWalletAbi, } from "./abis";
+import { Modules, SmartContracts, TrueWalletErrorCodes } from "./constants";
+import { BalanceOfAbi, DecimalsAbi, entrypointABI, factoryABI, TransferAbi, TrueWalletAbi, } from "./abis";
 import { UserOperationBuilder } from "./user-operation-builder";
 import { TrueWalletError, TrueWalletModules } from "./types";
 import { BundlerClient } from "./bundler";
 import { encodeFunctionData, isContract, getCreateWalletArgs } from "./utils";
 import { TrueWalletRecoveryModule } from "./modules";
-import defaultOptions from "./constants/default-options";
 import { onlyOwner, walletReady } from "./decorators";
 
 export class TrueWalletSDK {
   private ready: boolean = false;
-  private readonly config: TrueWalletConfig;
 
   readonly signer: Wallet;
   readonly rpcProvider!: JsonRpcProvider;
 
   private readonly factorySC: Contract;
+  private readonly entrypointSC: Contract;
   private walletSC!: Contract;
 
   private socialRecoveryModule: TrueWalletRecoveryModule | null = null;
@@ -38,11 +37,9 @@ export class TrueWalletSDK {
     return this.walletSC.target as string;
   }
 
-  constructor(c: Partial<TrueWalletConfig>) {
-    this.config = Object.assign({}, defaultOptions, c) as TrueWalletConfig;
-
+  constructor(config: TrueWalletConfig) {
     const requiredParams = ['rpcProviderUrl', 'salt', 'bundlerUrl'];
-    const isConfigValid = requiredParams.every((param) => this.config.hasOwnProperty(param));
+    const isConfigValid = requiredParams.every((param) => config.hasOwnProperty(param));
 
     if (!isConfigValid) {
       throw new TrueWalletError({
@@ -51,26 +48,28 @@ export class TrueWalletSDK {
       })
     }
 
-    this.rpcProvider = new JsonRpcProvider(this.config.rpcProviderUrl);
+    this.rpcProvider = new JsonRpcProvider(config.rpcProviderUrl);
 
-    const pk = this.getOwnerPk(this.config.salt);
+    const pk = this.getOwnerPk(config.salt);
     this.signer = new Wallet(pk, this.rpcProvider);
 
-    this.factorySC = new Contract(this.config.factory.address, this.config.factory.abi, this.signer);
+    this.factorySC = new Contract(SmartContracts.Factory, factoryABI, this.rpcProvider);
+    this.entrypointSC = new Contract(SmartContracts.Entrypoint, entrypointABI, this.rpcProvider);
 
     this.bundlerClient = new BundlerClient({
-      url: this.config.bundlerUrl,
-      entrypoint: this.config.entrypoint.address
+      url: config.bundlerUrl,
+      entrypoint: this.entrypointSC.target as string,
     });
   }
 
   async init(): Promise<TrueWalletSDK> {
-    const walletAddress = await this.getWalletAddress();
+    // FIXME: hardcoded wallet idx
+    const walletAddress = await this.getWalletAddress(0);
     this.walletSC = new Contract(walletAddress, TrueWalletAbi, this.signer);
     this.ready = await this.isWalletReady()
 
     this.operationBuilder = new UserOperationBuilder({
-      walletConfig: this.config,
+      entrypointSC: this.entrypointSC,
       rpcProvider: this.rpcProvider,
       bundlerClient: this.bundlerClient,
       signer: this.signer,
@@ -83,9 +82,10 @@ export class TrueWalletSDK {
     return this;
   }
 
-  private async getWalletAddress(): Promise<string> {
+  private async getWalletAddress(idx: number): Promise<string> {
     const args = getCreateWalletArgs(
-      this.config,
+      idx,
+      this.entrypointSC.target as string,
       await this.signer.getAddress(),
       [],
     );
@@ -257,14 +257,16 @@ export class TrueWalletSDK {
       return '0x';
     }
 
+    // FIXME: hardcoded wallet idx
     const args = getCreateWalletArgs(
-      this.config,
+      0,
+      this.entrypointSC.target as string,
       this.signer.address,
       []
     );
 
-    const callData = encodeFunctionData(this.config.factory.abi, 'createWallet', args);
-    return concat([this.config.factory.address, callData]);
+    const callData = encodeFunctionData(factoryABI, 'createWallet', args);
+    return concat([this.factorySC.target as string, callData]);
   }
 
   // MODULES

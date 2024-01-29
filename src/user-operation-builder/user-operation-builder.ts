@@ -3,23 +3,21 @@ import {
   Contract,
   getBytes,
   JsonRpcProvider,
-  Signer,
-  toBeHex,
+  toBeHex, Wallet,
 } from "ethers";
-import { TrueWalletConfig } from "../interfaces";
 import { BundlerClient } from "../bundler";
 
 export interface UserOperationBuilderConfig {
-  walletConfig: TrueWalletConfig;
+  entrypointSC: Contract;
   bundlerClient: BundlerClient;
   rpcProvider: JsonRpcProvider;
-  signer: Signer;
+  signer: Wallet;
 }
 
 export class UserOperationBuilder {
   private readonly bundlerClient: BundlerClient;
 
-  signer: Signer;
+  signer: Wallet;
   entrypointSC: Contract;
   rpcProvider: JsonRpcProvider;
 
@@ -27,7 +25,7 @@ export class UserOperationBuilder {
     this.rpcProvider = config.rpcProvider;
     this.bundlerClient = config.bundlerClient;
     this.signer = config.signer;
-    this.entrypointSC = new Contract(config.walletConfig.entrypoint.address, config.walletConfig.entrypoint.abi, this.signer);
+    this.entrypointSC = config.entrypointSC;
   }
 
   async buildOperation(operation: OperationParams, paymaster: string = '0x'): Promise<UserOperationData> {
