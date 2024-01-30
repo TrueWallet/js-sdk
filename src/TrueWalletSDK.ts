@@ -12,7 +12,7 @@ import { UserOperationBuilder } from "./user-operation-builder";
 import { TrueWalletError, TrueWalletModules } from "./types";
 import { BundlerClient } from "./bundler";
 import { encodeFunctionData, isContract, getCreateWalletArgs, getSigner } from "./utils";
-import { TrueWalletRecoveryModule } from "./modules";
+import { RecoveryModuleData, TrueWalletRecoveryModule } from "./modules";
 import { onlyOwner, walletReady } from "./decorators";
 
 export class TrueWalletSDK {
@@ -38,7 +38,7 @@ export class TrueWalletSDK {
 
   async init(config: TrueWalletConfig): Promise<TrueWalletSDK> {
     const requiredParams = ['rpcProviderUrl', 'signer', 'bundlerUrl'];
-    const isConfigValid = requiredParams.every((param) => config.hasOwnProperty(param));
+    const isConfigValid = requiredParams.every((param) => Object.prototype.hasOwnProperty.call(config, param));
 
     if (!isConfigValid) {
       throw new TrueWalletError({
@@ -135,10 +135,10 @@ export class TrueWalletSDK {
       const balance = await contract['balanceOf'](this.address);
 
       return formatUnits(balance, decimals);
-    } catch (err: any) {
+    } catch (err: unknown) {
       throw new TrueWalletError({
         code: TrueWalletErrorCodes.CALL_EXCEPTION,
-        message: err.message,
+        message: (err as Error).message,
       });
     }
   }
@@ -160,7 +160,7 @@ export class TrueWalletSDK {
    * });
    * */
   @onlyOwner
-  async send(params: SendParams, paymaster = '0x'): Promise<any> {
+  async send(params: SendParams, paymaster = '0x'): Promise<string> {
     return this.execute('0x', params.to, parseEther(params.amount.toString()).toString(), paymaster);
   }
 
@@ -183,7 +183,7 @@ export class TrueWalletSDK {
    * });
    * */
   @onlyOwner
-  async sendErc20(params: SendErc20Params, paymaster: string = '0x'): Promise<any> {
+  async sendErc20(params: SendErc20Params, paymaster: string = '0x'): Promise<string> {
     const tokenContract = new Contract(params.tokenAddress, [...DecimalsAbi, ...TransferAbi], this.rpcProvider);
     const decimals = await tokenContract.decimals();
 
@@ -260,12 +260,12 @@ export class TrueWalletSDK {
 
   // MODULES
   @onlyOwner
-  async installModule(module: TrueWalletModules, moduleData: any): Promise<string> {
+  async installModule(module: TrueWalletModules, moduleData: unknown): Promise<string> {
     const moduleAddress = Modules[module];
 
     switch (moduleAddress) {
       case Modules.SocialRecoveryModule:
-        return await (<TrueWalletRecoveryModule>this.socialRecoveryModule).install(moduleData);
+        return await (<TrueWalletRecoveryModule>this.socialRecoveryModule).install(moduleData as RecoveryModuleData);
       default:
         throw new TrueWalletError({
           code: TrueWalletErrorCodes.MODULE_NOT_SUPPORTED,

@@ -1,8 +1,10 @@
 import { TrueWalletError } from "../types";
 import { TrueWalletErrorCodes } from "../constants";
 
-export const walletReady = (originalMethod: any, _context: any) => {
-  return async function replacementMethod(this: any, ...args: any[]) {
+/* eslint-disable  @typescript-eslint/no-explicit-any */
+export const walletReady = (originalMethod: any, _context: unknown) => {
+  /* eslint-disable  @typescript-eslint/no-explicit-any */
+  return async function replacementMethod(this: any, ...args: unknown[]) {
     if (!this.ready) {
       this.ready = await this.isWalletReady();
 

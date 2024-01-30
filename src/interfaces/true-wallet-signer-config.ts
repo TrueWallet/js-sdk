@@ -1,4 +1,4 @@
 export interface TrueWalletSignerConfig {
   type: 'salt' | 'injected';
-  data: any[];
+  data: unknown[];
 }

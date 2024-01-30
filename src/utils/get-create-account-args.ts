@@ -6,7 +6,7 @@ export const getCreateWalletArgs = (
   entrypoint: string,
   owner: string,
   modules: string[],
-): any[] => {
+): unknown[] => {
 
   const securityInitData = getSecurityModuleInitData();
   return [

@@ -163,7 +163,7 @@ export class TrueWalletRecoveryModule {
     return this.recoveryModuleSC['getRecoveryApprovals'](this.wallet, newOwners);
   }
 
-  async getRecoveryEntry(walletAddress: string): Promise<any> {
+  async getRecoveryEntry(walletAddress: string): Promise<[string[], string, string]> {
     return this.recoveryModuleSC['getRecoveryEntry'](walletAddress);
   }
 
@@ -213,13 +213,13 @@ export class TrueWalletRecoveryModule {
   }
 
   /**
-   * Should be called by guardian to approve and set new owner of the wallet
-   * Before executing this function, guardian should call `approveRecovery` function `threshold` times
+   * Should be called by guardian to approve and set new owner of the wallet.
+   * Before executing this function, guardian should call `approveRecovery` function `threshold` times.
    * @param {string} wallet - address of the wallet that is being restored
    * @returns {Promise<string>} - userOperationHash
    * */
   async executeRecovery(wallet: string): Promise<string> {
-    const [newOwners, executeAfter, nonce] = await this.getRecoveryEntry(wallet);
+    const [_newOwners, executeAfter, _nonce] = await this.getRecoveryEntry(wallet);
 
     const canExecute = Number(executeAfter) * 1000 < Date.now();
     if (!canExecute) {

@@ -54,7 +54,8 @@ export class BundlerClient {
     return this.fetch<UserOperationData>(BundlerMethods.getUserOperationByHash, [hash, this.entrypoint]);
   }
 
-  getUserOperationReceipt(hash: string): Promise<any | null> {
+  // TODO: Add return type
+  getUserOperationReceipt(hash: string): Promise<unknown | null> {
     return this.fetch(BundlerMethods.getUserOperationReceipt, [hash]);
   }
 
@@ -62,7 +63,7 @@ export class BundlerClient {
     return this.fetch<string[]>(BundlerMethods.supportedEntryPoints, []);
   }
 
-  protected async fetch<T>(method: BundlerMethods, data: any[], options: RequestInit = {}): Promise<T> {
+  protected async fetch<T>(method: BundlerMethods, data: unknown[], options: RequestInit = {}): Promise<T> {
     const body: BodyInit = JSON.stringify({
       jsonrpc: '2.0',
       id: this.getId(),

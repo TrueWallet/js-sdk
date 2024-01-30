@@ -1,12 +1,13 @@
 import { BrowserProvider, Mnemonic, solidityPackedKeccak256, Wallet } from "ethers";
 import { TrueWalletSignerConfig } from "../interfaces";
+import { Eip1193Provider } from "ethers";
 
 export const getSigner = async (config: TrueWalletSignerConfig) => {
   switch (config.type) {
     case 'salt':
-      return await getSaltSigner(config.data[0]);
+      return await getSaltSigner(config.data[0] as string);
     case 'injected':
-      return await getInjectedSigner(config.data[0]);
+      return await getInjectedSigner(config.data[0] as Eip1193Provider);
     default:
       throw new Error('Invalid signer type');
   }
@@ -19,7 +20,7 @@ export const getSaltSigner = async (salt: string) => {
   return new Wallet(privateKey);
 }
 
-export const getInjectedSigner = async (provider: any) => {
+export const getInjectedSigner = async (provider: Eip1193Provider) => {
   const browserProvider = new BrowserProvider(provider);
   await browserProvider.send('eth_requestAccounts', []);
   return await browserProvider.getSigner();

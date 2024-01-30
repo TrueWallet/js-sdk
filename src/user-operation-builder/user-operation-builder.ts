@@ -32,8 +32,8 @@ export class UserOperationBuilder {
   async buildOperation(operation: OperationParams, paymaster: string = '0x'): Promise<UserOperationData> {
     const { maxFeePerGas, maxPriorityFeePerGas } = await this.getGasPrice();
 
-    const op: Partial<UserOperationData> = {
-      sender: operation.sender as string,
+    const op: UserOperationData = {
+      sender: operation.sender,
       nonce: operation.nonce,
       initCode: operation.initCode,
       callData: operation.callData,
@@ -54,10 +54,10 @@ export class UserOperationBuilder {
     return {
       ...estimatedOperation,
       signature: await this.getSignature(estimatedOperation),
-    } as UserOperationData;
+    };
   }
 
-  private async getGasEstimation(userOperation: Partial<UserOperationData>): Promise<any> {
+  private async getGasEstimation(userOperation: UserOperationData): Promise<UserOperationData> {
     const est = await this.bundlerClient.estimateUserOperationGas(userOperation);
 
     return {
