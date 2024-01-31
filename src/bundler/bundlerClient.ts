@@ -1,5 +1,5 @@
 import { BundlerMethods } from "./bundler-methods";
-import { UserOperationData } from "../user-operation-builder";
+import { UserOperationData, UserOperationReceipt, UserOperationResponse } from "../user-operation-builder";
 import { BundlerError, BundlerErrorCodes } from "./bundler-error";
 import { getAddress } from "ethers";
 import 'cross-fetch/polyfill';
@@ -42,8 +42,13 @@ export class BundlerClient {
    * @param {UserOperationData} operation - user operation data
    * @returns {string} Promise<string> - userOperationHash
    * */
-  async sendUserOperation(operation : UserOperationData): Promise<string> {
-    return await this.fetch(BundlerMethods.sendUserOperation, [operation, this.entrypoint]);
+  async sendUserOperation(operation : UserOperationData): Promise<UserOperationResponse> {
+    const opHash = await this.fetch<string>(BundlerMethods.sendUserOperation, [operation, this.entrypoint]);
+
+    return {
+      userOperationHash: opHash,
+      wait: () => this.getUserOperationReceipt(opHash),
+    }
   }
 
   estimateUserOperationGas(operation: Partial<UserOperationData>): Promise<GasEstimation> {
@@ -54,9 +59,24 @@ export class BundlerClient {
     return this.fetch<UserOperationData>(BundlerMethods.getUserOperationByHash, [hash, this.entrypoint]);
   }
 
-  // TODO: Add return type
-  getUserOperationReceipt(hash: string): Promise<unknown | null> {
-    return this.fetch(BundlerMethods.getUserOperationReceipt, [hash]);
+  getUserOperationReceipt(hash: string): Promise<UserOperationReceipt> {
+    return new Promise((resolve, reject) => {
+      const execute = async () => {
+        try {
+          const receipt = await this.fetch<UserOperationReceipt>(BundlerMethods.getUserOperationReceipt, [hash]);
+
+          if (receipt === null) {
+            setTimeout(execute, 3000);
+          } else {
+            resolve(receipt);
+          }
+        } catch (e) {
+          reject(e);
+        }
+      };
+
+      execute();
+    });
   }
 
   getSupportedEntryPoints(): Promise<string[]> {

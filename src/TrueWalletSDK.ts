@@ -15,7 +15,7 @@ import {
 } from "ethers";
 import { Modules, SmartContracts, TrueWalletErrorCodes } from "./constants";
 import { BalanceOfAbi, DecimalsAbi, entrypointABI, factoryABI, TransferAbi, TrueWalletAbi, } from "./abis";
-import { UserOperationBuilder } from "./user-operation-builder";
+import { UserOperationBuilder, UserOperationResponse } from "./user-operation-builder";
 import { TrueWalletError, TrueWalletModules } from "./types";
 import { BundlerClient } from "./bundler";
 import { encodeFunctionData, isContract, getCreateWalletArgs, getSigner } from "./utils";
@@ -35,7 +35,7 @@ export class TrueWalletSDK {
   private socialRecoveryModule: TrueWalletRecoveryModule | null = null;
 
   operationBuilder!: UserOperationBuilder;
-  bundlerClient!: BundlerClient;
+  bundler!: BundlerClient;
 
   get address(): string {
     return this.walletSC.target as string;
@@ -59,7 +59,7 @@ export class TrueWalletSDK {
     this.factorySC = new Contract(SmartContracts.Factory, factoryABI, this.rpcProvider);
     this.entrypointSC = new Contract(SmartContracts.Entrypoint, entrypointABI, this.rpcProvider);
 
-    this.bundlerClient = new BundlerClient({
+    this.bundler = new BundlerClient({
       url: config.bundlerUrl,
       entrypoint: this.entrypointSC.target as string,
     });
@@ -74,7 +74,7 @@ export class TrueWalletSDK {
     this.operationBuilder = new UserOperationBuilder({
       entrypointSC: this.entrypointSC,
       rpcProvider: this.rpcProvider,
-      bundlerClient: this.bundlerClient,
+      bundlerClient: this.bundler,
       signer: this.signer,
     });
 
@@ -157,7 +157,7 @@ export class TrueWalletSDK {
    * @param {string} params.to - recipient address
    * @param {string | number} params.amount - amount to send in ether unit
    * @param {string} [paymaster=0x] - paymaster address (optional)
-   * @returns {Promise<string>} - User Operation hash
+   * @returns {Promise<UserOperationResponse>} - User Operation Response
    *
    * @example
    * const wallet = new TrueWalletSDK({ ... });
@@ -167,7 +167,7 @@ export class TrueWalletSDK {
    * });
    * */
   @onlyOwner
-  async send(params: SendParams, paymaster = '0x'): Promise<string> {
+  async send(params: SendParams, paymaster = '0x'): Promise<UserOperationResponse> {
     return this.execute('0x', params.to, parseEther(params.amount.toString()).toString(), paymaster);
   }
 
@@ -179,7 +179,7 @@ export class TrueWalletSDK {
    * @param {string | number} params.amount - amount to send in ether unit
    * @param {string} params.tokenAddress - ERC20 token contract address
    * @param {string} [paymaster=0x] - paymaster contract address (optional)
-   * @returns {Promise<string>} - User Operation hash
+   * @returns {Promise<UserOperationResponse>} - User Operation Response
    *
    * @example
    * const wallet = new TrueWalletSDK({ ... });
@@ -190,7 +190,7 @@ export class TrueWalletSDK {
    * });
    * */
   @onlyOwner
-  async sendErc20(params: SendErc20Params, paymaster: string = '0x'): Promise<string> {
+  async sendErc20(params: SendErc20Params, paymaster: string = '0x'): Promise<UserOperationResponse> {
     const tokenContract = new Contract(params.tokenAddress, [...DecimalsAbi, ...TransferAbi], this.rpcProvider);
     const decimals = await tokenContract.decimals();
 
@@ -209,7 +209,7 @@ export class TrueWalletSDK {
   }
 
   @onlyOwner
-  async deployWallet(paymaster: string = '0x'): Promise<string> {
+  async deployWallet(paymaster: string = '0x'): Promise<UserOperationResponse> {
     return this.buildAndSendOperation('0x', paymaster);
   }
 
@@ -219,7 +219,7 @@ export class TrueWalletSDK {
     target: string = this.address,
     value: string = toBeHex(0),
     paymaster: string = '0x',
-  ): Promise<string> {
+  ): Promise<UserOperationResponse> {
     const executeTxData = encodeFunctionData(
       TrueWalletAbi,
       'execute',
@@ -239,10 +239,10 @@ export class TrueWalletSDK {
    * @param {unknown[]} params.args - contract method arguments
    * @param {string | number} [params.payableAmount] - amount to send in ether unit (optional)
    * @param {string} [params.paymaster] - paymaster contract address (optional)
-   * @returns {Promise<string>} - User Operation hash
+   * @returns {Promise<UserOperationResponse>} - User Operation hash
    * */
   @onlyOwner
-  async contractCall(params: ContractWriteParams): Promise<string> {
+  async contractCall(params: ContractWriteParams): Promise<UserOperationResponse> {
     const contract = new Contract(params.address, params.abi, this.rpcProvider);
     const txData = contract.interface.encodeFunctionData(params.method, params.args);
 
@@ -268,7 +268,7 @@ export class TrueWalletSDK {
     return contract[params.method](...params.args);
   }
 
-  private async buildAndSendOperation(data: string, paymaster: string): Promise<string> {
+  private async buildAndSendOperation(data: string, paymaster: string): Promise<UserOperationResponse> {
     let nonce;
 
     try {
@@ -284,7 +284,7 @@ export class TrueWalletSDK {
       nonce: toBeHex(nonce),
     }, paymaster);
 
-    return this.bundlerClient.sendUserOperation(userOperation);
+    return this.bundler.sendUserOperation(userOperation);
   }
 
   private async getInitCode(): Promise<string> {
@@ -306,7 +306,7 @@ export class TrueWalletSDK {
 
   // MODULES
   @onlyOwner
-  async installModule(module: TrueWalletModules, moduleData: unknown): Promise<string> {
+  async installModule(module: TrueWalletModules, moduleData: unknown): Promise<UserOperationResponse> {
     const moduleAddress = Modules[module];
 
     switch (moduleAddress) {
@@ -321,7 +321,7 @@ export class TrueWalletSDK {
   }
 
   @onlyOwner
-  async removeModule(module: TrueWalletModules): Promise<string> {
+  async removeModule(module: TrueWalletModules): Promise<UserOperationResponse> {
     const moduleAddress = Modules[module];
 
     switch (moduleAddress) {

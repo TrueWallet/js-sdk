@@ -14,6 +14,7 @@ import { SecurityControlModuleAbi } from "../../abis/security-control-module-abi
 import { TrueWalletError } from "../../types";
 import { RecoveryError, RecoveryErrorCodes } from "./recovery-module-errors";
 import { TrueWalletSDK } from "../../TrueWalletSDK";
+import { UserOperationResponse } from "../../user-operation-builder";
 
 
 export type RecoveryModuleData = {
@@ -26,25 +27,25 @@ export interface TrueWalletRecoveryModuleConfig {
   wallet: TrueWalletSDK,
 }
 
-export const getRecoveryModuleInitData = (data: RecoveryModuleData): string => {
+export const getRecoveryModuleInitData = (moduleData: RecoveryModuleData): string => {
   let callData = AbiCoder.defaultAbiCoder().encode(
     ['address[]', 'uint256', 'bytes32'],
-    [data.guardians, data.threshold, ZeroHash]
+    [moduleData.guardians, moduleData.threshold, ZeroHash]
   );
 
-  const isAnonymous = !!data.anonymousGuardiansSalt;
+  const isAnonymous = !!moduleData.anonymousGuardiansSalt;
 
   if (isAnonymous) {
-    const salt= encodeBytes32String(<string>data.anonymousGuardiansSalt?.toString());
+    const salt= encodeBytes32String(<string>moduleData.anonymousGuardiansSalt?.toString());
 
     const guardiansHash = solidityPackedKeccak256(
       ['address[]', 'bytes32'],
-      [data.guardians, salt]
+      [moduleData.guardians, salt]
     );
 
     callData = AbiCoder.defaultAbiCoder().encode(
       ['address[]', 'uint256', 'bytes32'],
-      [[], data.threshold, guardiansHash]
+      [[], moduleData.threshold, guardiansHash]
     );
   }
 
@@ -63,7 +64,7 @@ export class TrueWalletRecoveryModule {
     this.securityControlModuleSC = new Contract(Modules.SecurityControlModule, SecurityControlModuleAbi, this.wallet.rpcProvider);
   }
 
-  async install(data: RecoveryModuleData): Promise<string> {
+  async install(data: RecoveryModuleData): Promise<UserOperationResponse> {
     const isInit = await this.recoveryModuleSC.isInit(this.wallet.address);
 
     if (isInit) {
@@ -105,7 +106,7 @@ export class TrueWalletRecoveryModule {
     return this.executeFn(txData, Modules.SecurityControlModule);
   }
 
-  async remove(): Promise<string> {
+  async remove(): Promise<UserOperationResponse> {
     const isInit = await this.recoveryModuleSC.isInit(this.wallet.address);
 
     if (!isInit) {
@@ -185,40 +186,20 @@ export class TrueWalletRecoveryModule {
    * @method approveRecovery
    * @param {string} restoringWallet - address of the wallet that is being restored.
    * @param {string[]} newOwners - the list of addresses that will be the new owners of the wallet after recovery.
-   * @returns {Promise<string>} - userOperationHash
+   * @returns {Promise<UserOperationResponse>} - User Operation Response
    * */
-  async approveRecovery(restoringWallet: string, newOwners: string[]): Promise<string> {
+  async approveRecovery(restoringWallet: string, newOwners: string[]): Promise<UserOperationResponse> {
     const callData = encodeFunctionData(SocialRecoveryModuleAbi, 'approveRecovery', [restoringWallet, newOwners]);
     return this.executeFn(callData);
-  }
-
-  // fixme: check signatures
-  async batchApproveRecovery(newOwners: string[], signatureCount: number, signatures: string): Promise<string> {
-    const functionName = 'batchApproveRecovery';
-    const txData = this.recoveryModuleSC.interface.encodeFunctionData(functionName, [this.wallet.address, newOwners, signatureCount, signatures]);
-    return this.executeFn(txData);
-  }
-
-  async cancelSetGuardians(): Promise<string> {
-    const functionName = 'cancelSetGuardians';
-    const txData = this.recoveryModuleSC.interface.encodeFunctionData(functionName, [this.wallet.address]);
-    return this.executeFn(txData);
-  }
-
-  // fixme: check signatures
-  async checkNSignatures(dataHash: string, _signatureCount: number, signatures: string): Promise<string> {
-    const functionName = 'checkNSignatures';
-    const txData = this.recoveryModuleSC.interface.encodeFunctionData(functionName, [this.wallet.address, dataHash, _signatureCount, signatures]);
-    return this.executeFn(txData);
   }
 
   /**
    * Should be called by guardian to approve and set new owner of the wallet.
    * Before executing this function, guardian should call `approveRecovery` function `threshold` times.
    * @param {string} wallet - address of the wallet that is being restored
-   * @returns {Promise<string>} - userOperationHash
+   * @returns {Promise<UserOperationResponse>} - User Operation Response
    * */
-  async executeRecovery(wallet: string): Promise<string> {
+  async executeRecovery(wallet: string): Promise<UserOperationResponse> {
     const [_newOwners, executeAfter, _nonce] = await this.getRecoveryEntry(wallet);
 
     const canExecute = Number(executeAfter) * 1000 < Date.now();
@@ -233,36 +214,17 @@ export class TrueWalletRecoveryModule {
     return this.executeFn(callData);
   }
 
-  async processGuardianUpdates(): Promise<string> {
-    const functionName = 'processGuardianUpdates';
-    const txData = this.recoveryModuleSC.interface.encodeFunctionData(functionName, [this.wallet.address]);
-    return this.executeFn(txData);
-  }
-
-  async revealAnonymousGuardians(guardians: string[], salt: number): Promise<string> {
-    const functionName = 'revealAnonymousGuardians';
-    const txData = this.recoveryModuleSC.interface.encodeFunctionData(functionName, [this.wallet.address, guardians, salt]);
-    return this.executeFn(txData);
-  }
-
-  async updatePendingGuardians(threshold: number, guardiansHash: string): Promise<string> {
-    const functionName = 'updatePendingGuardians';
-    const txData = this.recoveryModuleSC.interface.encodeFunctionData(functionName, [this.wallet.address, threshold, guardiansHash]);
-    return this.executeFn(txData);
-  }
-
-
   /**
    * Method called by wallet owner to cancel recovery process
    * @method cancelRecovery
-   * @returns {Promise<string>} - userOperationHash
+   * @returns {Promise<UserOperationResponse>} - User Operation Response
    * */
-  async cancelRecovery(): Promise<string> {
+  async cancelRecovery(): Promise<UserOperationResponse> {
     const txData = encodeFunctionData(SocialRecoveryModuleAbi, 'cancelRecovery', [this.wallet.address]);
     return this.executeFn(txData);
   }
 
-  private async executeFn(txData: string, target: string = Modules.SocialRecoveryModule, payableAmount = toBeHex(0)): Promise<string> {
+  private async executeFn(txData: string, target: string = Modules.SocialRecoveryModule, payableAmount = toBeHex(0)): Promise<UserOperationResponse> {
     return this.wallet.execute(txData, target, payableAmount);
   }
 }
