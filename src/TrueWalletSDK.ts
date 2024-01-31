@@ -1,4 +1,11 @@
-import { SendErc20Params, SendParams, TrueWalletConfig, TrueWalletSigner } from "./interfaces";
+import {
+  ContractCallParams,
+  ContractWriteParams,
+  SendErc20Params,
+  SendParams,
+  TrueWalletConfig,
+  TrueWalletSigner
+} from "./interfaces";
 import {
   concat,
   Contract,
@@ -220,6 +227,45 @@ export class TrueWalletSDK {
     );
 
     return this.buildAndSendOperation(executeTxData, paymaster);
+  }
+
+
+  /**
+   * Used to call contract methods that change state
+   * @param params - contract call params
+   * @param {string} params.address - contract address
+   * @param {InterfaceAbi | Interface} params.abi - contract abi
+   * @param {string} params.method - contract method name to call
+   * @param {unknown[]} params.args - contract method arguments
+   * @param {string | number} [params.payableAmount] - amount to send in ether unit (optional)
+   * @param {string} [params.paymaster] - paymaster contract address (optional)
+   * @returns {Promise<string>} - User Operation hash
+   * */
+  @onlyOwner
+  async contractCall(params: ContractWriteParams): Promise<string> {
+    const contract = new Contract(params.address, params.abi, this.rpcProvider);
+    const txData = contract.interface.encodeFunctionData(params.method, params.args);
+
+    return this.execute(
+      txData,
+      params.address,
+      params.payableAmount?.toString() || toBeHex(0),
+      params.paymaster || '0x',
+    )
+  }
+
+  /**
+   * Used to call contract methods that don't change state
+   * @param params - contract call params
+   * @param {string} params.address - contract address
+   * @param {InterfaceAbi | Interface} params.abi - contract abi
+   * @param {string} params.method - contract method name to call
+   * @param {unknown[]} params.args - contract method arguments
+   * @returns {Promise<unknown>} - contract method call result
+   * */
+  async contractRead(params: ContractCallParams): Promise<unknown> {
+    const contract = new Contract(params.address, params.abi, this.rpcProvider);
+    return contract[params.method](...params.args);
   }
 
   private async buildAndSendOperation(data: string, paymaster: string): Promise<string> {
