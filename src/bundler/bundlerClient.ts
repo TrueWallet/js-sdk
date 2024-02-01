@@ -59,13 +59,23 @@ export class BundlerClient {
     return this.fetch<UserOperationData>(BundlerMethods.getUserOperationByHash, [hash, this.entrypoint]);
   }
 
-  getUserOperationReceipt(hash: string): Promise<UserOperationReceipt> {
+  getUserOperationReceipt(hash: string, maxRetry: number = 0): Promise<UserOperationReceipt> {
     return new Promise((resolve, reject) => {
       const execute = async () => {
         try {
           const receipt = await this.fetch<UserOperationReceipt>(BundlerMethods.getUserOperationReceipt, [hash]);
+          const useRetry = maxRetry > 0;
+          let retries = 0;
 
           if (receipt === null) {
+            if (useRetry && retries >= maxRetry) {
+              reject(new BundlerError({
+                code: BundlerErrorCodes.MAX_RETRIES_EXCEEDED,
+                message: 'User operation not found',
+              }));
+            }
+
+            retries++;
             setTimeout(execute, 3000);
           } else {
             resolve(receipt);

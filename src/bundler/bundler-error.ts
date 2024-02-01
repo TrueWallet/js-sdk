@@ -1,5 +1,6 @@
 export enum BundlerErrorCodes {
   BUNDLER_ERROR = 'BUNDLER_ERROR',
+  MAX_RETRIES_EXCEEDED = 'MAX_RETRIES_EXCEEDED',
 }
 
 export type BundlerErrorConfig = {
