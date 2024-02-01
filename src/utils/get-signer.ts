@@ -8,6 +8,8 @@ export const getSigner = async (config: TrueWalletSignerConfig) => {
       return await getSaltSigner(config.data[0] as string);
     case 'injected':
       return await getInjectedSigner(config.data[0] as Eip1193Provider);
+    case 'privateKey':
+      return new Wallet(config.data[0] as string);
     default:
       throw new Error('Invalid signer type');
   }
