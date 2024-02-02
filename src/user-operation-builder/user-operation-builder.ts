@@ -17,10 +17,9 @@ export interface UserOperationBuilderConfig {
 
 export class UserOperationBuilder {
   private readonly bundlerClient: BundlerClient;
-
-  signer: TrueWalletSigner;
-  entrypointSC: Contract;
-  rpcProvider: JsonRpcProvider;
+  private readonly signer: TrueWalletSigner;
+  private readonly entrypointSC: Contract;
+  private readonly rpcProvider: JsonRpcProvider;
 
   constructor(config: UserOperationBuilderConfig) {
     this.rpcProvider = config.rpcProvider;
