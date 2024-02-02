@@ -1,0 +1,10 @@
+{
+  "entryPoints": ["src/TrueWalletSDK.ts", "src/index.ts"],
+  "out": "docs",
+  "name": "True Wallet SDK",
+  "excludeNotDocumented": true,
+  "excludeProtected": true,
+  "excludePrivate": true,
+  "disableSources": true,
+  "hideGenerator": true
+}

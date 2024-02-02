@@ -22,8 +22,11 @@ import { encodeFunctionData, isContract, getCreateWalletArgs, getSigner } from "
 import { RecoveryModuleData, TrueWalletRecoveryModule } from "./modules";
 import { onlyOwner, walletReady } from "./decorators";
 
+
+/** Main SDK class */
 export class TrueWalletSDK {
-  private ready: boolean = false;
+  /** @property {boolean} ready - is wallet deployed to blockchain */
+  ready: boolean = false;
 
   private signer!: TrueWalletSigner;
   rpcProvider!: JsonRpcProvider;

@@ -14,7 +14,8 @@
     "lint": "eslint . --cache --ext js,ts",
     "example:browser": "npx http-server -c-1",
     "example:node": "node ./examples/node/index.js",
-    "prepare": "husky install"
+    "prepare": "husky install",
+    "docs": "typedoc --plugin typedoc-plugin-markdown"
   },
   "author": "",
   "license": "GPL-3.0",
@@ -28,12 +29,14 @@
     "cross-fetch": "^4.0.0",
     "cypress": "^13.2.0",
     "eslint": "^8.56.0",
+    "husky": "^8.0.0",
     "rollup": "^3.29.4",
     "rollup-plugin-dotenv": "^0.5.0",
     "rollup-plugin-typescript2": "^0.36.0",
     "tslib": "^2.6.2",
-    "typescript": "^5.3.3",
-    "husky": "^8.0.0"
+    "typedoc": "^0.25.7",
+    "typedoc-plugin-markdown": "^3.17.1",
+    "typescript": "^5.3.3"
   },
   "dependencies": {
     "ethers": "^6.9.2"
