@@ -18,5 +18,4 @@ export interface ContractCallParams {
 
 export interface ContractWriteParams extends ContractCallParams {
   payableAmount?: number | string;
-  paymaster?: string;
 }

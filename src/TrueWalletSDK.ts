@@ -241,11 +241,11 @@ export class TrueWalletSDK {
    * @param {string} params.method - contract method name to call
    * @param {unknown[]} params.args - contract method arguments
    * @param {string | number} [params.payableAmount] - amount to send in ether unit (optional)
-   * @param {string} [params.paymaster] - paymaster contract address (optional)
+   * @param {string} [paymaster='0x'] - paymaster contract address (optional)
    * @returns {Promise<UserOperationResponse>} - User Operation hash
    * */
   @onlyOwner
-  async contractCall(params: ContractWriteParams): Promise<UserOperationResponse> {
+  async contractCall(params: ContractWriteParams, paymaster: string = '0x'): Promise<UserOperationResponse> {
     const contract = new Contract(params.address, params.abi, this.rpcProvider);
     const txData = contract.interface.encodeFunctionData(params.method, params.args);
 
@@ -253,7 +253,7 @@ export class TrueWalletSDK {
       txData,
       params.address,
       params.payableAmount?.toString() || toBeHex(0),
-      params.paymaster || '0x',
+      paymaster,
     )
   }
 
