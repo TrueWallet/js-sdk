@@ -18,7 +18,12 @@ Main SDK class
 - [contractRead](TrueWalletSDK.TrueWalletSDK.md#contractread)
 - [getBalance](TrueWalletSDK.TrueWalletSDK.md#getbalance)
 - [getERC20Balance](TrueWalletSDK.TrueWalletSDK.md#geterc20balance)
+- [getInstalledModules](TrueWalletSDK.TrueWalletSDK.md#getinstalledmodules)
+- [getModuleAddress](TrueWalletSDK.TrueWalletSDK.md#getmoduleaddress)
 - [getNonce](TrueWalletSDK.TrueWalletSDK.md#getnonce)
+- [installModule](TrueWalletSDK.TrueWalletSDK.md#installmodule)
+- [isWalletOwner](TrueWalletSDK.TrueWalletSDK.md#iswalletowner)
+- [removeModule](TrueWalletSDK.TrueWalletSDK.md#removemodule)
 - [send](TrueWalletSDK.TrueWalletSDK.md#send)
 - [sendErc20](TrueWalletSDK.TrueWalletSDK.md#senderc20)
 
@@ -32,15 +37,16 @@ Main SDK class
 
 ### contractCall
 
-▸ **contractCall**(`params`): `Promise`\<`UserOperationResponse`\>
+▸ **contractCall**(`params`, `paymaster?`): `Promise`\<`UserOperationResponse`\>
 
 Used to call contract methods that change state
 
 #### Parameters
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `params` | `ContractWriteParams` | contract call params |
+| Name | Type | Default value | Description |
+| :------ | :------ | :------ | :------ |
+| `params` | `ContractWriteParams` | `undefined` | contract call params |
+| `paymaster?` | `string` | `'0x'` | paymaster contract address (optional) |
 
 #### Returns
 
@@ -126,6 +132,48 @@ await wallet.getERC20Balance('0x...');
 
 ___
 
+### getInstalledModules
+
+▸ **getInstalledModules**(): `Promise`\<`string`[]\>
+
+Method to get installed modules
+
+#### Returns
+
+`Promise`\<`string`[]\>
+
+- list of contract addresses of installed modules
+
+**`Method`**
+
+getInstalledModules
+
+___
+
+### getModuleAddress
+
+▸ **getModuleAddress**(`module`): `string`
+
+Method to get module smart contract address
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `module` | `TrueWalletModules` | module |
+
+#### Returns
+
+`string`
+
+- contract address of the module
+
+**`Method`**
+
+getModuleAddress
+
+___
+
 ### getNonce
 
 ▸ **getNonce**(): `Promise`\<`bigint`\>
@@ -148,6 +196,79 @@ getNonce
 const wallet = new TrueWalletSDK({ ... });
 await wallet.getNonce();
 ```
+
+___
+
+### installModule
+
+▸ **installModule**(`module`, `moduleData`): `Promise`\<`UserOperationResponse`\>
+
+Method to install internal modules
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `module` | `TrueWalletModules` | module to install |
+| `moduleData` | `unknown` | data for the module installation |
+
+#### Returns
+
+`Promise`\<`UserOperationResponse`\>
+
+- User Operation Response
+
+**`Method`**
+
+installModule
+
+___
+
+### isWalletOwner
+
+▸ **isWalletOwner**(`address`): `Promise`\<`boolean`\>
+
+Method to check if given address is wallet owner
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `address` | `string` | address to check |
+
+#### Returns
+
+`Promise`\<`boolean`\>
+
+- is wallet owner
+
+**`Method`**
+
+isWalletOwner
+
+___
+
+### removeModule
+
+▸ **removeModule**(`module`): `Promise`\<`UserOperationResponse`\>
+
+Method to remove internal modules
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `module` | `TrueWalletModules` | module to remove |
+
+#### Returns
+
+`Promise`\<`UserOperationResponse`\>
+
+- User Operation Response
+
+**`Method`**
+
+removeModule
 
 ___
 

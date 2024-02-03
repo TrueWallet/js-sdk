@@ -170,7 +170,7 @@ export class TrueWalletSDK {
    * });
    * */
   @onlyOwner
-  async send(params: SendParams, paymaster = '0x'): Promise<UserOperationResponse> {
+  async send(params: SendParams, paymaster: string = '0x'): Promise<UserOperationResponse> {
     return this.execute('0x', params.to, parseEther(params.amount.toString()).toString(), paymaster);
   }
 
@@ -216,6 +216,15 @@ export class TrueWalletSDK {
     return this.buildAndSendOperation('0x', paymaster);
   }
 
+  /**
+   * Low level method to execute the transaction on behalf of the wallet
+   * @method execute
+   * @param {string} payload - transaction data
+   * @param {string} [target=this.address] - target address
+   * @param {string} [value=0] - amount to send in ether unit
+   * @param {string} [paymaster=0x] - paymaster contract address
+   * @returns {Promise<UserOperationResponse>} - User Operation Response
+   * */
   @onlyOwner
   async execute(
     payload: string,
@@ -308,6 +317,13 @@ export class TrueWalletSDK {
   }
 
   // MODULES
+  /**
+   * Method to install internal modules
+   * @method installModule
+   * @param {TrueWalletModules} module - module to install
+   * @param {unknown} moduleData - data for the module installation
+   * @returns {Promise<UserOperationResponse>} - User Operation Response
+   * */
   @onlyOwner
   async installModule(module: TrueWalletModules, moduleData: unknown): Promise<UserOperationResponse> {
     const moduleAddress = Modules[module];
@@ -323,6 +339,12 @@ export class TrueWalletSDK {
     }
   }
 
+  /**
+   * Method to remove internal modules
+   * @method removeModule
+   * @param {TrueWalletModules} module - module to remove
+   * @returns {Promise<UserOperationResponse>} - User Operation Response
+   * */
   @onlyOwner
   async removeModule(module: TrueWalletModules): Promise<UserOperationResponse> {
     const moduleAddress = Modules[module];
@@ -339,15 +361,32 @@ export class TrueWalletSDK {
   }
 
 
+  /**
+   * Method to get installed modules
+   * @method getInstalledModules
+   * @returns {Promise<string[]>} - list of contract addresses of installed modules
+   * */
   @walletReady
   async getInstalledModules(): Promise<string[]> {
     return this.walletSC['listModules']();
   }
 
+  /**
+   * Method to get module smart contract address
+   * @method getModuleAddress
+   * @param {TrueWalletModules} module - module
+   * @returns {string} - contract address of the module
+   * */
   getModuleAddress(module: TrueWalletModules): string {
     return Modules[module];
   }
 
+  /**
+   * Method to check if given address is wallet owner
+   * @method isWalletOwner
+   * @param {string} address - address to check
+   * @returns {Promise<boolean>} - is wallet owner
+   * */
   @walletReady
   async isWalletOwner(address: string): Promise<boolean> {
     return this.walletSC['isOwner'](address);
