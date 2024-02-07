@@ -16,6 +16,7 @@ Main SDK class
 
 - [contractCall](TrueWalletSDK.TrueWalletSDK.md#contractcall)
 - [contractRead](TrueWalletSDK.TrueWalletSDK.md#contractread)
+- [execute](TrueWalletSDK.TrueWalletSDK.md#execute)
 - [getBalance](TrueWalletSDK.TrueWalletSDK.md#getbalance)
 - [getERC20Balance](TrueWalletSDK.TrueWalletSDK.md#geterc20balance)
 - [getInstalledModules](TrueWalletSDK.TrueWalletSDK.md#getinstalledmodules)
@@ -73,6 +74,33 @@ Used to call contract methods that don't change state
 `Promise`\<`unknown`\>
 
 - contract method call result
+
+___
+
+### execute
+
+▸ **execute**(`payload`, `target?`, `value?`, `paymaster?`): `Promise`\<`UserOperationResponse`\>
+
+Low level method to execute the transaction on behalf of the wallet
+
+#### Parameters
+
+| Name | Type | Default value | Description |
+| :------ | :------ | :------ | :------ |
+| `payload` | `string` | `undefined` | transaction data |
+| `target?` | `string` | `undefined` | target address |
+| `value?` | `string` | `undefined` | amount to send in ether unit |
+| `paymaster?` | `string` | `'0x'` | paymaster contract address |
+
+#### Returns
+
+`Promise`\<`UserOperationResponse`\>
+
+- User Operation Response
+
+**`Method`**
+
+execute
 
 ___
 

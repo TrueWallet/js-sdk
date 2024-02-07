@@ -186,10 +186,15 @@ export class TrueWalletRecoveryModule {
    * @method approveRecovery
    * @param {string} restoringWallet - address of the wallet that is being restored.
    * @param {string[]} newOwners - the list of addresses that will be the new owners of the wallet after recovery.
+   * @param {number} pendingUntil - the time in seconds until which the recovery will be pending.
    * @returns {Promise<UserOperationResponse>} - User Operation Response
    * */
-  async approveRecovery(restoringWallet: string, newOwners: string[]): Promise<UserOperationResponse> {
-    const callData = encodeFunctionData(SocialRecoveryModuleAbi, 'approveRecovery', [restoringWallet, newOwners]);
+  async approveRecovery(restoringWallet: string, newOwners: string[], pendingUntil: number): Promise<UserOperationResponse> {
+    const callData = encodeFunctionData(
+      SocialRecoveryModuleAbi,
+      'approveRecovery',
+      [restoringWallet, newOwners, pendingUntil]
+    );
     return this.executeFn(callData);
   }
 

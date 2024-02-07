@@ -31,7 +31,6 @@
     "eslint": "^8.56.0",
     "husky": "^8.0.0",
     "rollup": "^3.29.4",
-    "rollup-plugin-dotenv": "^0.5.0",
     "rollup-plugin-typescript2": "^0.36.0",
     "tslib": "^2.6.2",
     "typedoc": "^0.25.7",
