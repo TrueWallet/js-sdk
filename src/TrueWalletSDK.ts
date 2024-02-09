@@ -11,14 +11,14 @@ import {
   Contract,
   formatEther, formatUnits,
   JsonRpcProvider,
-  parseEther, parseUnits, toBeHex
+  parseEther, parseUnits, solidityPackedKeccak256, toBeHex
 } from "ethers";
 import { Modules, SmartContracts, TrueWalletErrorCodes } from "./constants";
 import { BalanceOfAbi, DecimalsAbi, entrypointABI, factoryABI, TransferAbi, TrueWalletAbi, } from "./abis";
 import { UserOperationBuilder, UserOperationResponse } from "./user-operation-builder";
 import { TrueWalletError, TrueWalletModules } from "./types";
 import { BundlerClient } from "./bundler";
-import { encodeFunctionData, isContract, getCreateWalletArgs, getSigner } from "./utils";
+import { encodeFunctionData, isContract, getSigner, getSecurityModuleInitData } from "./utils";
 import { RecoveryModuleData, TrueWalletRecoveryModule } from "./modules";
 import { onlyOwner, walletReady } from "./decorators";
 
@@ -89,14 +89,9 @@ export class TrueWalletSDK {
   }
 
   private async getWalletAddress(idx: number): Promise<string> {
-    const args = getCreateWalletArgs(
-      idx,
-      this.entrypointSC.target as string,
-      this.signer.address,
-      [],
-    );
+    const walletSalt = this.getWalletSalt(idx);
 
-    return this.factorySC['getWalletAddress'](...args);
+    return this.factorySC['getWalletAddress'](walletSalt);
   }
 
   /**
@@ -304,15 +299,11 @@ export class TrueWalletSDK {
       return '0x';
     }
 
+    const initializer = await this.getInitializerData();
     // FIXME: hardcoded wallet idx
-    const args = getCreateWalletArgs(
-      0,
-      this.entrypointSC.target as string,
-      this.signer.address,
-      []
-    );
+    const walletSalt = this.getWalletSalt(0);
+    const callData = encodeFunctionData(factoryABI, 'createWallet', [initializer, walletSalt]);
 
-    const callData = encodeFunctionData(factoryABI, 'createWallet', args);
     return concat([this.factorySC.target as string, callData]);
   }
 
@@ -394,5 +385,27 @@ export class TrueWalletSDK {
 
   private async isWalletReady(): Promise<boolean> {
     return isContract(this.address, this.rpcProvider);
+  }
+
+  private async getInitializerData(): Promise<string> {
+    const args = [
+      this.entrypointSC.target,
+      this.signer.address,
+      [getSecurityModuleInitData()]
+    ];
+
+    return await this.factorySC['getInitializer'](...args);
+  }
+
+  private getWalletSalt(walletIdx: number): string {
+    return solidityPackedKeccak256(
+      ['address', 'address', 'bytes', 'string'],
+      [
+        this.entrypointSC.target,
+        this.signer.address,
+        getSecurityModuleInitData(),
+        walletIdx.toString(),
+      ]
+    );
   }
 }

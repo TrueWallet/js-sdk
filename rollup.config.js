@@ -7,25 +7,8 @@ import terser from "@rollup/plugin-terser";
 const config = [{
   input: 'src/index.ts',
   output: [{
-    file: 'dist/browser/es/true-wallet-sdk.js',
-    format: 'es',
-    sourcemap: true,
-    inlineDynamicImports: true,
-  }, {
-    file: 'dist/browser/esm/true-wallet-sdk.js',
+    file: 'dist/esm/index.js',
     format: 'esm',
-    sourcemap: true,
-    inlineDynamicImports: true,
-  }, {
-    name: 'TrueWalletSDK',
-    file: 'dist/browser/iife/true-wallet-sdk.js',
-    format: 'iife',
-    sourcemap: true,
-    inlineDynamicImports: true,
-  }, {
-    name: 'browser',
-    file: 'dist/browser/umd/true-wallet-sdk.js',
-    format: 'umd',
     sourcemap: true,
     inlineDynamicImports: true,
   }],
@@ -42,13 +25,8 @@ const config = [{
   input: 'src/index.ts',
   external: ['cross-fetch', 'cross-fetch/polyfill'],
   output: [{
-    dir: 'dist/node/cjs',
+    dir: 'dist/cjs',
     format: 'cjs',
-    sourcemap: true,
-    inlineDynamicImports: true,
-  }, {
-    dir: 'dist/node/es',
-    format: 'es',
     sourcemap: true,
     inlineDynamicImports: true,
   }],

@@ -1,8 +1,9 @@
 {
-  "name": "true-wallet-sdk",
+  "name": "@truewallet/sdk",
   "version": "0.0.0",
   "description": "True Wallet SDK to manage ERC-4337 wallet",
-  "main": "index.js",
+  "author": "TrueWallet (https://true-wallet.io/)",
+  "homepage": "https://docs.true-wallet.io/",
   "repository": {
     "type": "git",
     "url": "https://github.com/TrueWallet/js-sdk.git"
@@ -17,7 +18,6 @@
     "prepare": "husky install",
     "docs": "typedoc --plugin typedoc-plugin-markdown"
   },
-  "author": "",
   "license": "GPL-3.0",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",
@@ -40,8 +40,19 @@
   "dependencies": {
     "ethers": "^6.9.2"
   },
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "typings": "index.d.ts",
   "types": "./dist/browser/es/index.d.ts",
-  "exports": [
-    "./dist/browser/es/true-wallet-sdk.js"
+  "exports": {
+    ".": {
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js",
+      "default": "./dist/cjs/index.js"
+    }
+  },
+  "files": [
+    "dist/*",
+    "README.md"
   ]
 }
