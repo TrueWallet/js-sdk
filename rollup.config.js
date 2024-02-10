@@ -2,6 +2,7 @@ import typescript from "rollup-plugin-typescript2";
 import commonjs from '@rollup/plugin-commonjs';
 import {nodeResolve} from '@rollup/plugin-node-resolve';
 import terser from "@rollup/plugin-terser";
+import dotenv from "rollup-plugin-dotenv"
 
 
 const config = [{
@@ -13,6 +14,7 @@ const config = [{
     inlineDynamicImports: true,
   }],
   plugins: [
+    dotenv.default(),
     nodeResolve({
       browser: true,
       preferBuiltins: false,
@@ -31,6 +33,7 @@ const config = [{
     inlineDynamicImports: true,
   }],
   plugins: [
+    dotenv.default(),
     nodeResolve({
       browser: false,
       preferBuiltins: true,
