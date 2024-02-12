@@ -47,17 +47,17 @@ export class TrueWalletSDK {
   constructor() {}
 
   async init(config: TrueWalletConfig): Promise<TrueWalletSDK> {
-    const requiredParams = ['rpcProviderUrl', 'signer', 'bundlerUrl'];
+    const requiredParams = ['signer', 'bundlerUrl'];
     const isConfigValid = requiredParams.every((param) => Object.prototype.hasOwnProperty.call(config, param));
 
     if (!isConfigValid) {
       throw new TrueWalletError({
         code: TrueWalletErrorCodes.CONFIG_ERROR,
-        message: `Parameters 'rpcProviderUrl', 'salt', 'bundlerUrl' are required in config.`,
+        message: `Parameters 'salt', 'bundlerUrl' are required in config.`,
       })
     }
 
-    this.rpcProvider = new JsonRpcProvider(config.rpcProviderUrl);
+    this.rpcProvider = new JsonRpcProvider(config.rpcProviderUrl || config.bundlerUrl);
 
     this.factorySC = new Contract(SmartContracts.Factory, factoryABI, this.rpcProvider);
     this.entrypointSC = new Contract(SmartContracts.Entrypoint, entrypointABI, this.rpcProvider);

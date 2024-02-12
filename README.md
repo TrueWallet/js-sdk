@@ -22,15 +22,16 @@ To check all available methods, please refer to the [authentication](/sdk/authen
 
 ### Initialisation with salt:
 ```javascript
-  import {init} from '@truewallet/sdk';
+  import {initTrueWallet} from '@truewallet/sdk';
 
   /** Initialisation with salt */
-  const trueWallet = await init({
+  const trueWallet = await initTrueWallet({
     signer: {
       type: 'salt',
       data: ['{{YOUR_UNIQUE_STRING_FOR_PRIVATE_KEY_GENERATION}}']
     },
-    rpcProviderUrl: '{{ENDPOINT_URL_FROM_DASHBOARD}}',
     bundlerUrl: '{{ENDPOINT_URL_FROM_DASHBOARD}}',
+    // Optional, bundlerUrl is used when rpcProviderUrl is not provided
+    // rpcProviderUrl: '{{ENDPOINT_URL_FROM_DASHBOARD}}',
   });
 ```
