@@ -8,6 +8,8 @@ Before starting you need to create an account in the TrueWallet [dashboard](http
 
 ## Installation
 Install the required packages for initializing the TrueWallet SDK.
+
+*Tested with Angular, React, and Node.js v18 and higher*
 ```shell
 npm install @truewallet/sdk
 ```

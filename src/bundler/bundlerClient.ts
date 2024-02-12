@@ -2,7 +2,6 @@ import { BundlerMethods } from "./bundler-methods";
 import { UserOperationData, UserOperationReceipt, UserOperationResponse } from "../user-operation-builder";
 import { BundlerError, BundlerErrorCodes } from "./bundler-error";
 import { getAddress } from "ethers";
-import 'cross-fetch/polyfill';
 
 
 /**
