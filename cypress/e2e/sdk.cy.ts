@@ -1,28 +1,33 @@
 /// <reference types="cypress" />
 
-import { ethToWei, isEthAddress, weiToEth } from "../../src/utils";
+import { fromWei, isEthAddress, toWei } from "../../src/utils";
 
 describe('SDK utils', () => {
-  it('should convert wei to eth', () => {
+  it('should convert wei to units', () => {
     const wei = 1_000_000_000_000_000_000n;
-    const eth = weiToEth(wei);
+    const eth = fromWei(wei);
 
     expect(eth).to.equal('1.0');
 
     const wei2 = 1_000_000n;
-    const eth2 = weiToEth(wei2, 6);
+    const eth2 = fromWei(wei2, 6);
 
     expect(eth2).to.equal('1.0');
+
+    const wei3 = '1000000000000000000';
+    const eth3 = fromWei(wei3);
+
+    expect(eth3).to.equal('1.0');
   });
 
-  it('should convert eth to wei', () => {
+  it('should convert units to wei', () => {
     const eth = '1.0';
-    const wei = ethToWei(eth);
+    const wei = toWei(eth);
 
     expect(wei).to.equal(1_000_000_000_000_000_000n);
 
     const eth2 = '1.0';
-    const wei2 = ethToWei(eth2, 6);
+    const wei2 = toWei(eth2, 6);
 
     expect(wei2).to.equal(1_000_000n);
   });

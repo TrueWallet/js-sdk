@@ -32,7 +32,7 @@ To check all available methods, please refer to the [authentication](/sdk/authen
       data: ['{{YOUR_UNIQUE_STRING_FOR_PRIVATE_KEY_GENERATION}}']
     },
     bundlerUrl: '{{ENDPOINT_URL_FROM_DASHBOARD}}',
-    // Optional, used bundlerUrl if not provided
+    // Optional, bundlerUrl is used when rpcProviderUrl is not provided
     // rpcProviderUrl: '{{ENDPOINT_URL_FROM_DASHBOARD}}',
   });
 ```

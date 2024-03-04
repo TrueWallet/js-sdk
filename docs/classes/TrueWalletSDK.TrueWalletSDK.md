@@ -6,6 +6,10 @@
 
 Main SDK class
 
+## Implements
+
+- `TrueWallet`
+
 ## Table of contents
 
 ### Properties
@@ -34,6 +38,10 @@ Main SDK class
 
 • **ready**: `boolean` = `false`
 
+#### Implementation of
+
+TrueWallet.ready
+
 ## Methods
 
 ### contractCall
@@ -55,6 +63,10 @@ Used to call contract methods that change state
 
 - User Operation hash
 
+#### Implementation of
+
+TrueWallet.contractCall
+
 ___
 
 ### contractRead
@@ -74,6 +86,10 @@ Used to call contract methods that don't change state
 `Promise`\<`unknown`\>
 
 - contract method call result
+
+#### Implementation of
+
+TrueWallet.contractRead
 
 ___
 
@@ -102,6 +118,10 @@ Low level method to execute the transaction on behalf of the wallet
 
 execute
 
+#### Implementation of
+
+TrueWallet.execute
+
 ___
 
 ### getBalance
@@ -126,6 +146,10 @@ getBalance
 const wallet = new TrueWalletSDK({ ... });
 await wallet.getBalance();
 ```
+
+#### Implementation of
+
+TrueWallet.getBalance
 
 ___
 
@@ -158,6 +182,10 @@ const wallet = new TrueWalletSDK({ ... });
 await wallet.getERC20Balance('0x...');
 ```
 
+#### Implementation of
+
+TrueWallet.getERC20Balance
+
 ___
 
 ### getInstalledModules
@@ -175,6 +203,10 @@ Method to get installed modules
 **`Method`**
 
 getInstalledModules
+
+#### Implementation of
+
+TrueWallet.getInstalledModules
 
 ___
 
@@ -199,6 +231,10 @@ Method to get module smart contract address
 **`Method`**
 
 getModuleAddress
+
+#### Implementation of
+
+TrueWallet.getModuleAddress
 
 ___
 
@@ -225,6 +261,10 @@ const wallet = new TrueWalletSDK({ ... });
 await wallet.getNonce();
 ```
 
+#### Implementation of
+
+TrueWallet.getNonce
+
 ___
 
 ### installModule
@@ -250,6 +290,10 @@ Method to install internal modules
 
 installModule
 
+#### Implementation of
+
+TrueWallet.installModule
+
 ___
 
 ### isWalletOwner
@@ -274,6 +318,10 @@ Method to check if given address is wallet owner
 
 isWalletOwner
 
+#### Implementation of
+
+TrueWallet.isWalletOwner
+
 ___
 
 ### removeModule
@@ -297,6 +345,10 @@ Method to remove internal modules
 **`Method`**
 
 removeModule
+
+#### Implementation of
+
+TrueWallet.removeModule
 
 ___
 
@@ -333,6 +385,10 @@ await wallet.send({
 });
 ```
 
+#### Implementation of
+
+TrueWallet.send
+
 ___
 
 ### sendErc20
@@ -368,3 +424,7 @@ await wallet.sendErc20({
   tokenAddress: '0x...',
 });
 ```
+
+#### Implementation of
+
+TrueWallet.sendErc20
