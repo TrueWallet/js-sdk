@@ -31,7 +31,7 @@
     "husky": "^8.0.0",
     "rollup": "^3.29.4",
     "rollup-plugin-dotenv": "^0.5.0",
-    "rollup-plugin-generate-package-json": "^3.2.0",
+    "rollup-plugin-dts": "^6.1.0",
     "rollup-plugin-typescript2": "^0.36.0",
     "tslib": "^2.6.2",
     "typedoc": "^0.25.7",
@@ -41,14 +41,17 @@
   "dependencies": {
     "ethers": "^6.9.2"
   },
-  "main": "./dist/cjs/index.js",
-  "module": "./dist/esm/index.js",
+  "main": "dist/sdk.cjs",
+  "module": "dist/sdk.mjs",
+  "typings": "dist/sdk.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/esm/index.js",
-      "default": "./dist/cjs/index.js"
+      "import": "./dist/sdk.mjs",
+      "require": "./dist/sdk.cjs",
+      "types": "./dist/sdk.d.ts"
     }
   },
+  "sideEffects": false,
   "files": [
     "dist/*",
     "README.md"

@@ -3,6 +3,7 @@ import { TrueWalletSDK } from './TrueWalletSDK';
 
 export { TrueWalletErrorCodes } from './constants';
 export { BundlerError } from './bundler';
+export * from './user-operation-builder/user-operation-data';
 export * from './types';
 export * from './interfaces';
 export * from './modules';

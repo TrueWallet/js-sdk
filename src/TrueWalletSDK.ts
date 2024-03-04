@@ -2,7 +2,7 @@ import {
   ContractCallParams,
   ContractWriteParams,
   SendErc20Params,
-  SendParams,
+  SendParams, TrueWallet,
   TrueWalletConfig,
   TrueWalletSigner
 } from "./interfaces";
@@ -24,7 +24,7 @@ import { onlyOwner, walletReady } from "./decorators";
 
 
 /** Main SDK class */
-export class TrueWalletSDK {
+export class TrueWalletSDK implements TrueWallet {
   /** @property {boolean} ready - is wallet deployed to blockchain */
   ready: boolean = false;
 

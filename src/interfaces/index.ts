@@ -1,3 +1,4 @@
+export * from './true-wallet';
 export * from './true-wallet-config';
 export * from './true-wallet-params';
 export * from './true-wallet-signer';

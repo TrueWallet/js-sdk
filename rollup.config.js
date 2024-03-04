@@ -3,62 +3,46 @@ import commonjs from '@rollup/plugin-commonjs';
 import { nodeResolve } from '@rollup/plugin-node-resolve';
 import terser from "@rollup/plugin-terser";
 import dotenv from "rollup-plugin-dotenv"
-import generatePackageJson from "rollup-plugin-generate-package-json";
+import { dts } from "rollup-plugin-dts";
 
 
 const config = [{
   input: 'src/index.ts',
   output: [{
-    file: 'dist/esm/index.js',
+    file: 'dist/sdk.mjs',
     format: 'esm',
-    sourcemap: true,
-    inlineDynamicImports: true,
+    plugins: [
+      nodeResolve({
+        browser: true,
+        modulesOnly: true,
+        preferBuiltins: false,
+      }),
+    ],
+  }, {
+    file: 'dist/sdk.cjs',
+    format: 'cjs',
+    plugins: [
+      nodeResolve({
+        browser: false,
+        modulesOnly: true,
+        preferBuiltins: true,
+        exportConditions: ['node']
+      }),
+    ]
   }],
+  inlineDynamicImports: true,
+  sourcemap: true,
   treeshake: true,
   plugins: [
     dotenv.default(),
-    nodeResolve({
-      browser: true,
-      modulesOnly: true,
-      preferBuiltins: false,
-    }),
     commonjs({transformMixedEsModules: true}),
     typescript(),
-    terser(),
-    generatePackageJson({
-      baseContents: {
-        type: 'module',
-        types: 'dist/esm/index.d.ts',
-      },
-    })
+    // terser(),
   ]
 }, {
-  input: 'src/index.ts',
-  output: [{
-    dir: 'dist/cjs',
-    format: 'cjs',
-    sourcemap: true,
-    inlineDynamicImports: true,
-  }],
-  treeshake: true,
-  plugins: [
-    dotenv.default(),
-    nodeResolve({
-      browser: false,
-      modulesOnly: true,
-      preferBuiltins: true,
-      exportConditions: ['node']
-    }),
-    commonjs({transformMixedEsModules: true}),
-    typescript(),
-    terser(),
-    generatePackageJson({
-      baseContents: {
-        type: 'commonjs',
-        types: 'dist/cjs/index.d.ts',
-      },
-    }),
-  ]
+  input: "./dist/index.d.ts",
+  output: [{ file: "./dist/sdk.d.ts" }],
+  plugins: [dts()],
 }];
 
 export default config;
