@@ -21,6 +21,7 @@ import { BundlerClient } from "./bundler";
 import { encodeFunctionData, isContract, getSigner, getSecurityModuleInitData } from "./utils";
 import { RecoveryModuleData, TrueWalletRecoveryModule } from "./modules";
 import { onlyOwner, walletReady } from "./decorators";
+import { Erc20Manager, Erc721Manager } from "./classes";
 
 
 /** Main SDK class */
@@ -39,6 +40,8 @@ export class TrueWalletSDK implements TrueWallet {
 
   operationBuilder!: UserOperationBuilder;
   bundler!: BundlerClient;
+  erc20!: Erc20Manager;
+  erc721!: Erc721Manager;
 
   get address(): string {
     return this.walletSC.target as string;
@@ -84,6 +87,9 @@ export class TrueWalletSDK implements TrueWallet {
     this.socialRecoveryModule = new TrueWalletRecoveryModule({
       wallet: this,
     });
+
+    this.erc20 = new Erc20Manager(this);
+    this.erc721 = new Erc721Manager(this);
 
     return this;
   }

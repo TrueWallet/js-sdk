@@ -18,6 +18,7 @@ const config = [{
         preferBuiltins: false,
       }),
     ],
+    inlineDynamicImports: true,
   }, {
     file: 'dist/sdk.cjs',
     format: 'cjs',
@@ -28,9 +29,9 @@ const config = [{
         preferBuiltins: true,
         exportConditions: ['node']
       }),
-    ]
+    ],
+    inlineDynamicImports: true,
   }],
-  inlineDynamicImports: true,
   sourcemap: true,
   treeshake: true,
   plugins: [

@@ -1,8 +1,9 @@
 import { Interface, InterfaceAbi } from "ethers/lib.commonjs/abi";
 
 export interface SendParams {
-  amount: number | string;
+  amount: number | string | bigint;
   to: string;
+  from: string;
 }
 
 export interface SendErc20Params extends SendParams {
