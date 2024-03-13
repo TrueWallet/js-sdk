@@ -1,7 +1,6 @@
 import {
   ContractCallParams,
   ContractWriteParams,
-  SendErc20Params,
   SendParams, TrueWallet,
   TrueWalletConfig,
   TrueWalletSigner
@@ -9,12 +8,12 @@ import {
 import {
   concat,
   Contract,
-  formatEther, formatUnits,
+  formatEther,
   JsonRpcProvider,
-  parseEther, parseUnits, solidityPackedKeccak256, toBeHex
+  parseEther, solidityPackedKeccak256, toBeHex
 } from "ethers";
 import { Modules, SmartContracts, TrueWalletErrorCodes } from "./constants";
-import { BalanceOfAbi, DecimalsAbi, entrypointABI, factoryABI, TransferAbi, TrueWalletAbi, } from "./abis";
+import { entrypointABI, factoryABI, TrueWalletAbi, } from "./abis";
 import { UserOperationBuilder, UserOperationResponse } from "./user-operation-builder";
 import { TrueWalletError, TrueWalletModules } from "./types";
 import { BundlerClient } from "./bundler";
@@ -129,32 +128,6 @@ export class TrueWalletSDK implements TrueWallet {
   }
 
   /**
-   * Get ERC20 token balance
-   * @method getERC20Balance
-   * @param {string} tokenAddress - ERC20 token contract address
-   * @returns {Promise<string>} - token balance in ether unit
-   *
-   * @example
-   * const wallet = new TrueWalletSDK({ ... });
-   * await wallet.getERC20Balance('0x...');
-   * */
-  async getERC20Balance(tokenAddress: string): Promise<string> {
-    const contract = new Contract(tokenAddress, [...BalanceOfAbi, ...DecimalsAbi], this.rpcProvider);
-
-    try {
-      const decimals = await contract.decimals();
-      const balance = await contract['balanceOf'](this.address);
-
-      return formatUnits(balance, decimals);
-    } catch (err: unknown) {
-      throw new TrueWalletError({
-        code: TrueWalletErrorCodes.CALL_EXCEPTION,
-        message: (err as Error).message,
-      });
-    }
-  }
-
-  /**
    * Send native currency to recipient
    * @method send
    * @param {Object} params
@@ -171,45 +144,8 @@ export class TrueWalletSDK implements TrueWallet {
    * });
    * */
   @onlyOwner
-  async send(params: SendParams, paymaster: string = '0x'): Promise<UserOperationResponse> {
+  async send(params: Omit<SendParams, 'from'>, paymaster: string = '0x'): Promise<UserOperationResponse> {
     return this.execute('0x', params.to, parseEther(params.amount.toString()).toString(), paymaster);
-  }
-
-  /**
-   * Send ERC20 token to recipient
-   * @method sendErc20
-   * @param {Object} params
-   * @param {string} params.to - recipient address
-   * @param {string | number} params.amount - amount to send in ether unit
-   * @param {string} params.tokenAddress - ERC20 token contract address
-   * @param {string} [paymaster=0x] - paymaster contract address (optional)
-   * @returns {Promise<UserOperationResponse>} - User Operation Response
-   *
-   * @example
-   * const wallet = new TrueWalletSDK({ ... });
-   * await wallet.sendErc20({
-   *   to: '0x...',
-   *   amount: '0.1',
-   *   tokenAddress: '0x...',
-   * });
-   * */
-  @onlyOwner
-  async sendErc20(params: SendErc20Params, paymaster: string = '0x'): Promise<UserOperationResponse> {
-    const tokenContract = new Contract(params.tokenAddress, [...DecimalsAbi, ...TransferAbi], this.rpcProvider);
-    const decimals = await tokenContract.decimals();
-
-    const txData = tokenContract.interface.encodeFunctionData('transfer', [
-      params.to,
-      parseUnits(params.amount.toString(), decimals),
-    ]);
-
-    const data = encodeFunctionData(TrueWalletAbi, 'execute', [
-      await tokenContract.getAddress(),
-      parseEther('0'),
-      txData,
-    ]);
-
-    return this.buildAndSendOperation(data, paymaster);
   }
 
   @onlyOwner

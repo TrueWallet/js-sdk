@@ -16,6 +16,6 @@ export const fromWei = (wei: string | number | bigint, decimals: number = 18): s
  * @param {number} [decimals=18] - Number of decimals to use on conversion
  * @returns {bigint} - Wei value of given ETH
  * */
-export const toWei = (eth: string, decimals: number = 18): bigint => {
+export const toWei = (eth: string, decimals: number | bigint = 18): bigint => {
   return parseUnits(eth, decimals);
 }

@@ -19,7 +19,7 @@ export const ERC20Abi = [
 ];
 
 /**
- * Helper class to manage ERC20 tokens
+ * Helper class to run ERC20 tokens functions
  * */
 export class Erc20Manager {
   private sdk: TrueWalletSDK;
@@ -28,6 +28,11 @@ export class Erc20Manager {
     this.sdk = sdk;
   }
 
+  /**
+   * Returns the balance of the current wallet in tokens
+   * @param {string} tokenAddress - Address of the token
+   * @returns {Promise<string>} - Balance of the wallet in tokens
+   * */
   async getBalance(tokenAddress: string): Promise<string> {
     const contract = new Contract(tokenAddress, [...BalanceOfAbi, ...DecimalsAbi], this.sdk.rpcProvider);
 
@@ -44,6 +49,15 @@ export class Erc20Manager {
     }
   }
 
+  /**
+   * Send the `params.amount` of tokens from the current wallet to the `params.to` address
+   * @param {SendErc20Params} params - Parameters for the transfer
+   * @param {string} params.to - Address to transfer the tokens to
+   * @param {number | string | bigint} params.amount - Amount of tokens to transfer in tokens
+   * @param {string} params.tokenAddress - Address of the token
+   * @param {string} [paymaster=0x] - Address of the paymaster
+   * @returns {Promise<UserOperationResponse>} - User Operation Response
+   * */
   async send(params: Omit<SendErc20Params, 'from'>, paymaster: string = '0x'): Promise<UserOperationResponse> {
     const tokenContract = new Contract(params.tokenAddress, [...DecimalsAbi, ...TransferAbi], this.sdk.rpcProvider);
     const decimals = await tokenContract.decimals();
@@ -56,6 +70,11 @@ export class Erc20Manager {
     return this.sdk.execute(txData, params.tokenAddress, toBeHex(0), paymaster);
   }
 
+  /**
+   * Returns the name of the token
+   * @param {string} tokenAddress - Address of the token
+   * @returns {Promise<string>} - Name of the token
+   * */
   async name(tokenAddress: string): Promise<string> {
     const contract = this._getContract(tokenAddress);
 
@@ -69,6 +88,11 @@ export class Erc20Manager {
     }
   }
 
+  /**
+   * Returns the symbol of the token
+   * @param {string} tokenAddress - Address of the token
+   * @returns {Promise<string>} - Symbol of the token
+   * */
   async symbol(tokenAddress: string): Promise<string> {
     const contract = this._getContract(tokenAddress);
 
@@ -82,6 +106,11 @@ export class Erc20Manager {
     }
   }
 
+  /**
+   * Returns the number of decimals the token uses
+   * @param {string} tokenAddress - Address of the token
+   * @returns {Promise<bigint>} - Number of decimals
+   * */
   async decimals(tokenAddress: string): Promise<bigint> {
     const contract = this._getContract(tokenAddress);
 
@@ -95,6 +124,11 @@ export class Erc20Manager {
     }
   }
 
+  /**
+   * Returns the total token supply.
+   * @param {string} tokenAddress - Address of the token
+   * @returns {Promise<bigint>} - Total supply of the token in wei
+   * */
   async totalSupply(tokenAddress: string): Promise<bigint> {
     const contract = this._getContract(tokenAddress);
 
@@ -108,6 +142,12 @@ export class Erc20Manager {
     }
   }
 
+  /**
+   * Returns the account balance of another account with address `owner`.
+   * @param {string} tokenAddress - Address of the token
+   * @param {string} owner - Address of the account for the balance check
+   * @returns {Promise<bigint>} - Balance of the account in wei
+   * */
   async balanceOf(tokenAddress: string, owner: string): Promise<bigint> {
     const contract = this._getContract(tokenAddress);
 
@@ -121,6 +161,13 @@ export class Erc20Manager {
     }
   }
 
+  /**
+   * Returns the amount which `spender` is still allowed to withdraw from `owner`.
+   * @param {string} tokenAddress - Address of the token
+   * @param {string} owner - Address of the account that owns the tokens
+   * @param {string} spender - Address of the account that is allowed to spend the tokens
+   * @returns {Promise<bigint>} - Remaining allowance of the spender in wei
+   * */
   async allowance(tokenAddress: string, owner: string, spender: string): Promise<bigint> {
     const contract = this._getContract(tokenAddress);
 
@@ -135,6 +182,15 @@ export class Erc20Manager {
 
   }
 
+  /**
+   * Transfers `params.amount` of tokens to address 'params.to', and MUST fire the Transfer event.
+   * The function SHOULD throw if the message caller’s account balance does not have enough tokens to spend.
+   * @param {SendErc20Params} params - Parameters for the transfer
+   * @param {string} params.to - Address to transfer the tokens to
+   * @param {number | string | bigint} params.amount - Amount of tokens to transfer in wei
+   * @param {string} params.tokenAddress - Address of the token
+   * @param {string} [paymaster=0x] - Address of the paymaster
+   * */
   async transfer(params: Omit<SendErc20Params, 'from'>, paymaster: string = '0x'): Promise<UserOperationResponse> {
     const tokenContract = this._getContract(params.tokenAddress);
 
@@ -146,6 +202,21 @@ export class Erc20Manager {
     return this.sdk.execute(txData, params.tokenAddress, toBeHex(0), paymaster);
   }
 
+
+  /**
+   * Transfers `params.amount` of tokens from address `params.from` to address `params.to`, and MUST fire the Transfer event.
+   * The transferFrom method is used for a withdrawal workflow, allowing contracts to transfer tokens on your behalf.
+   * This can be used for example to allow a contract to transfer tokens on your behalf and/or to charge fees in sub-currencies.
+   * The function SHOULD throw unless the `params.from` account has deliberately authorized the sender of the message via some mechanism.
+   *
+   * @param {SendErc20Params} params - Parameters for the transfer
+   * @param {string} params.from - Address to transfer the tokens from
+   * @param {string} params.to - Address to transfer the tokens to
+   * @param {number | string | bigint} params.amount - Amount of tokens to transfer in wei
+   * @param {string} params.tokenAddress - Address of the token
+   * @param {string} [paymaster=0x] - Address of the paymaster
+   * @returns {Promise<UserOperationResponse>} - User Operation Response
+   * */
   async transferFrom(params: SendErc20Params, paymaster: string = '0x'): Promise<UserOperationResponse> {
     const tokenContract = this._getContract(params.tokenAddress);
 
@@ -159,7 +230,18 @@ export class Erc20Manager {
 
   }
 
-  async approve(params: { spender: string, tokenAddress: string, amount: bigint }, paymaster: string = '0x'): Promise<UserOperationResponse> {
+  /**
+   * Allows `params.spender` to withdraw from your account multiple times, up to the `params.amount`.
+   * If this function is called again it overwrites the current allowance with _value.
+   *
+   * @param {SendErc20Params} params - Parameters for the transfer
+   * @param {string} params.spender - Address of the account that is allowed to spend the tokens
+   * @param {number | string | bigint} params.amount - Amount of tokens to approve in wei
+   * @param {string} params.tokenAddress - Address of the token
+   * @param {string} [paymaster=0x] - Address of the paymaster
+   * @returns {Promise<UserOperationResponse>} - User Operation Response
+   * */
+  async approve(params: { spender: string, tokenAddress: string, amount: bigint | number | string }, paymaster: string = '0x'): Promise<UserOperationResponse> {
     const tokenContract = this._getContract(params.tokenAddress);
 
     const txData = tokenContract.interface.encodeFunctionData('approve', [

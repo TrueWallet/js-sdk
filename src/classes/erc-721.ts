@@ -20,7 +20,7 @@ export const ERC721Abi = [
 ];
 
 /**
- * Class to manage ERC721 tokens functions
+ * Helper class to run ERC721 tokens functions
  * */
 export class Erc721Manager {
   private sdk: TrueWalletSDK;
@@ -36,7 +36,6 @@ export class Erc721Manager {
    * */
   async balanceOf(tokenAddress: string): Promise<string> {
     const contract = this._getContract(tokenAddress);
-    console.log('contract', contract);
 
     try {
       const balance = await contract['balanceOf'](this.sdk.address);

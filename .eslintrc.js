@@ -10,6 +10,13 @@ module.exports = {
         argsIgnorePattern: '^_',
       }
     ],
+    'no-console': [
+      'error',
+      {
+        allow: ['warn', 'error']
+      }
+    ],
+    'no-debugger': 'error',
   },
   root: true,
   ignorePatterns: [
