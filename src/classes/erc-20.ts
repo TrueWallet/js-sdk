@@ -3,7 +3,7 @@ import { Contract, formatUnits, parseUnits, toBeHex } from "ethers";
 import { BalanceOfAbi, DecimalsAbi, TransferAbi } from "../abis";
 import { TrueWalletError } from "../types";
 import { TrueWalletErrorCodes } from "../constants";
-import { SendErc20Params } from "../interfaces";
+import { ApproveErc20Params, SendErc20Params } from "../interfaces";
 import { TrueWalletSDK } from "../TrueWalletSDK";
 
 export const ERC20Abi = [
@@ -232,16 +232,16 @@ export class Erc20Manager {
 
   /**
    * Allows `params.spender` to withdraw from your account multiple times, up to the `params.amount`.
-   * If this function is called again it overwrites the current allowance with _value.
+   * If this function is called again it overwrites the current allowance with 'params.amount'.
    *
-   * @param {SendErc20Params} params - Parameters for the transfer
+   * @param {object} params - Parameters for the transfer
    * @param {string} params.spender - Address of the account that is allowed to spend the tokens
    * @param {number | string | bigint} params.amount - Amount of tokens to approve in wei
    * @param {string} params.tokenAddress - Address of the token
    * @param {string} [paymaster=0x] - Address of the paymaster
    * @returns {Promise<UserOperationResponse>} - User Operation Response
    * */
-  async approve(params: { spender: string, tokenAddress: string, amount: bigint | number | string }, paymaster: string = '0x'): Promise<UserOperationResponse> {
+  async approve(params: ApproveErc20Params, paymaster: string = '0x'): Promise<UserOperationResponse> {
     const tokenContract = this._getContract(params.tokenAddress);
 
     const txData = tokenContract.interface.encodeFunctionData('approve', [

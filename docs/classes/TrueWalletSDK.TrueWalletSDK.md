@@ -22,7 +22,6 @@ Main SDK class
 - [contractRead](TrueWalletSDK.TrueWalletSDK.md#contractread)
 - [execute](TrueWalletSDK.TrueWalletSDK.md#execute)
 - [getBalance](TrueWalletSDK.TrueWalletSDK.md#getbalance)
-- [getERC20Balance](TrueWalletSDK.TrueWalletSDK.md#geterc20balance)
 - [getInstalledModules](TrueWalletSDK.TrueWalletSDK.md#getinstalledmodules)
 - [getModuleAddress](TrueWalletSDK.TrueWalletSDK.md#getmoduleaddress)
 - [getNonce](TrueWalletSDK.TrueWalletSDK.md#getnonce)
@@ -30,7 +29,6 @@ Main SDK class
 - [isWalletOwner](TrueWalletSDK.TrueWalletSDK.md#iswalletowner)
 - [removeModule](TrueWalletSDK.TrueWalletSDK.md#removemodule)
 - [send](TrueWalletSDK.TrueWalletSDK.md#send)
-- [sendErc20](TrueWalletSDK.TrueWalletSDK.md#senderc20)
 
 ## Properties
 
@@ -150,41 +148,6 @@ await wallet.getBalance();
 #### Implementation of
 
 TrueWallet.getBalance
-
-___
-
-### getERC20Balance
-
-▸ **getERC20Balance**(`tokenAddress`): `Promise`\<`string`\>
-
-Get ERC20 token balance
-
-#### Parameters
-
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `tokenAddress` | `string` | ERC20 token contract address |
-
-#### Returns
-
-`Promise`\<`string`\>
-
-- token balance in ether unit
-
-**`Method`**
-
-getERC20Balance
-
-**`Example`**
-
-```ts
-const wallet = new TrueWalletSDK({ ... });
-await wallet.getERC20Balance('0x...');
-```
-
-#### Implementation of
-
-TrueWallet.getERC20Balance
 
 ___
 
@@ -362,7 +325,7 @@ Send native currency to recipient
 
 | Name | Type | Default value | Description |
 | :------ | :------ | :------ | :------ |
-| `params` | `SendParams` | `undefined` |  |
+| `params` | `Omit`\<`SendParams`, ``"from"``\> | `undefined` |  |
 | `paymaster?` | `string` | `'0x'` | paymaster address (optional) |
 
 #### Returns
@@ -388,43 +351,3 @@ await wallet.send({
 #### Implementation of
 
 TrueWallet.send
-
-___
-
-### sendErc20
-
-▸ **sendErc20**(`params`, `paymaster?`): `Promise`\<`UserOperationResponse`\>
-
-Send ERC20 token to recipient
-
-#### Parameters
-
-| Name | Type | Default value | Description |
-| :------ | :------ | :------ | :------ |
-| `params` | `SendErc20Params` | `undefined` |  |
-| `paymaster?` | `string` | `'0x'` | paymaster contract address (optional) |
-
-#### Returns
-
-`Promise`\<`UserOperationResponse`\>
-
-- User Operation Response
-
-**`Method`**
-
-sendErc20
-
-**`Example`**
-
-```ts
-const wallet = new TrueWalletSDK({ ... });
-await wallet.sendErc20({
-  to: '0x...',
-  amount: '0.1',
-  tokenAddress: '0x...',
-});
-```
-
-#### Implementation of
-
-TrueWallet.sendErc20

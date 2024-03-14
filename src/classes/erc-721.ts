@@ -3,6 +3,12 @@ import { Contract, toBeHex } from "ethers";
 import { TrueWalletError } from "../types";
 import { TrueWalletErrorCodes } from "../constants";
 import { UserOperationResponse } from "../user-operation-builder";
+import {
+  ApproveAllErc721Params,
+  ApproveErc721Params,
+  SafeTransferErc721Params,
+  TransferErc721Params
+} from "../interfaces";
 
 export const ERC721Abi = [
   'function balanceOf(address _owner) external view returns (uint256)',
@@ -107,7 +113,7 @@ export class Erc721Manager {
   }
 
   /**
-   * An abbreviated name for NFTs in this contract\
+   * An abbreviated name for NFTs in this contract
    * @param {string} tokenAddress - Address of the ERC-721 NFT token contract
    * @returns {Promise<string>} Promise with the symbol of the token
    * */
@@ -171,7 +177,7 @@ export class Erc721Manager {
    * @param {string} [paymaster='0x'] - Address of the paymaster contract
    * @returns {Promise<UserOperationResponse>} Promise with the response of the operation
    * */
-  async approve(params: { to: string, tokenAddress: string, tokenId: number }, paymaster: string = '0x'): Promise<UserOperationResponse> {
+  async approve(params: ApproveErc721Params, paymaster: string = '0x'): Promise<UserOperationResponse> {
     const contract = new Contract(params.tokenAddress, ERC721Abi, this.sdk.rpcProvider);
 
     const txData = contract.interface.encodeFunctionData('approve', [params.to, params.tokenId]);
@@ -188,7 +194,7 @@ export class Erc721Manager {
    * @param {string} [paymaster='0x'] - Address of the paymaster contract
    * @returns {Promise<UserOperationResponse>} Promise with the response of the operation
    * */
-  setApprovalForAll(params: { operator: string, approved: boolean, tokenAddress: string }, paymaster: string = '0x'): Promise<UserOperationResponse> {
+  setApprovalForAll(params: ApproveAllErc721Params, paymaster: string = '0x'): Promise<UserOperationResponse> {
     const contract = this._getContract(params.tokenAddress);
 
     const txData = contract.interface.encodeFunctionData('setApprovalForAll', [params.operator, params.approved]);
@@ -197,8 +203,8 @@ export class Erc721Manager {
   }
 
   /**
-   * Transfer ownership of an NFT -- THE CALLER IS RESPONSIBLE
-   * TO CONFIRM THAT `_to` IS CAPABLE OF RECEIVING NFTS OR ELSE
+   * Transfer ownership of an NFT - THE CALLER IS RESPONSIBLE
+   * TO CONFIRM THAT `params.to` IS CAPABLE OF RECEIVING NFTS OR ELSE
    * THEY MAY BE PERMANENTLY LOST
    * @param {object} params - Object with the parameters for the operation
    * @param {string} params.from - The current owner of the NFT
@@ -208,7 +214,7 @@ export class Erc721Manager {
    * @param {string} [paymaster='0x'] - Address of the paymaster contract
    * @returns {Promise<UserOperationResponse>} Promise with the response of the operation
    * */
-  transferFrom(params: { from: string, to: string, tokenId: number, tokenAddress: string }, paymaster: string = '0x'): Promise<UserOperationResponse> {
+  transferFrom(params: TransferErc721Params, paymaster: string = '0x'): Promise<UserOperationResponse> {
     const contract = this._getContract(params.tokenAddress);
 
     const txData = contract.interface.encodeFunctionData('transferFrom', [params.from, params.to, params.tokenId]);
@@ -226,7 +232,7 @@ export class Erc721Manager {
    * @param {string} [paymaster='0x'] - Address of the paymaster contract
    * @returns {Promise<UserOperationResponse>} Promise with the response of the operation
    * */
-  safeTransferFrom(params: { from: string, to: string, tokenId: number, tokenAddress: string, data?: string }, paymaster: string = '0x'): Promise<UserOperationResponse> {
+  safeTransferFrom(params: SafeTransferErc721Params, paymaster: string = '0x'): Promise<UserOperationResponse> {
     const contract = this._getContract(params.tokenAddress);
 
     const callParams = [params.from, params.to, params.tokenId];
