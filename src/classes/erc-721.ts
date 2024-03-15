@@ -37,11 +37,11 @@ export class Erc721Manager {
 
   /**
    * Count all NFTs assigned to an owner
-   * @param {string} tokenAddress - Address of the ERC-721 NFT token contract
+   * @param {string} contractAddress - Address of the ERC-721 NFT token contract
    * @returns {Promise<string>} Promise with the number of NFTs owned by the wallet
    * */
-  async balanceOf(tokenAddress: string): Promise<string> {
-    const contract = this._getContract(tokenAddress);
+  async balanceOf(contractAddress: string): Promise<string> {
+    const contract = this._getContract(contractAddress);
 
     try {
       const balance = await contract['balanceOf'](this.sdk.address);
@@ -57,12 +57,12 @@ export class Erc721Manager {
 
   /**
    * Get the approved address for a single NFT
-   * @param {string} tokenAddress - Address of the ERC-721 NFT token contract
+   * @param {string} contractAddress - Address of the ERC-721 NFT token contract
    * @param {number} tokenId - ID of the NFT
    * @returns {Promise<string>} Promise with the address of the approved account
    * */
-  async getApproved(tokenAddress: string, tokenId: number): Promise<string> {
-    const contract = this._getContract(tokenAddress);
+  async getApproved(contractAddress: string, tokenId: number): Promise<string> {
+    const contract = this._getContract(contractAddress);
 
     try {
       return await contract['getApproved'](tokenId);
@@ -76,13 +76,13 @@ export class Erc721Manager {
 
   /**
   * Query if an address is an authorized operator for another address
-   * @param {string} tokenAddress - Address of the ERC-721 NFT token contract
+   * @param {string} contractAddress - Address of the ERC-721 NFT token contract
    * @param {string} owner - The address that owns the NFTs
    * @param {string} operator - The address that acts on behalf of the owner
    * @returns {Promise<boolean>} Promise with True if `operator` is an approved operator for `owner`, false otherwise
   * */
-  async isApprovedForAll(tokenAddress: string, owner: string, operator: string): Promise<boolean> {
-    const contract = this._getContract(tokenAddress);
+  async isApprovedForAll(contractAddress: string, owner: string, operator: string): Promise<boolean> {
+    const contract = this._getContract(contractAddress);
 
     try {
       return await contract['isApprovedForAll'](owner, operator);
@@ -96,11 +96,11 @@ export class Erc721Manager {
 
   /**
    * A descriptive name for a collection of NFTs in this contract
-   * @param {string} tokenAddress - Address of the ERC-721 NFT token contract
+   * @param {string} contractAddress - Address of the ERC-721 NFT token contract
    * @returns {Promise<string>} Promise with the name of the token
    * */
-  async name(tokenAddress: string): Promise<string> {
-    const contract = this._getContract(tokenAddress);
+  async name(contractAddress: string): Promise<string> {
+    const contract = this._getContract(contractAddress);
 
     try {
       return await contract['name']();
@@ -114,11 +114,11 @@ export class Erc721Manager {
 
   /**
    * An abbreviated name for NFTs in this contract
-   * @param {string} tokenAddress - Address of the ERC-721 NFT token contract
+   * @param {string} contractAddress - Address of the ERC-721 NFT token contract
    * @returns {Promise<string>} Promise with the symbol of the token
    * */
-  async symbol(tokenAddress: string): Promise<string> {
-    const contract = this._getContract(tokenAddress);
+  async symbol(contractAddress: string): Promise<string> {
+    const contract = this._getContract(contractAddress);
 
     try {
       return await contract['symbol']();
@@ -132,12 +132,12 @@ export class Erc721Manager {
 
   /**
    * A distinct Uniform Resource Identifier (URI) for a given asset.
-   * @param {string} tokenAddress - Address of the ERC-721 NFT token contract
+   * @param {string} contractAddress - Address of the ERC-721 NFT token contract
    * @param {number} tokenId - ID of the NFT
    * @returns {Promise<string>} Promise with the URI of the token
    * */
-  async tokenURI(tokenAddress: string, tokenId: number): Promise<string> {
-    const contract = this._getContract(tokenAddress);
+  async tokenURI(contractAddress: string, tokenId: number): Promise<string> {
+    const contract = this._getContract(contractAddress);
 
     try {
       return await contract['tokenURI'](tokenId);
@@ -151,12 +151,12 @@ export class Erc721Manager {
 
   /**
    * Find the owner of an NFT
-   * @param {string} tokenAddress - Address of the ERC-721 NFT token contract
+   * @param {string} contractAddress - Address of the ERC-721 NFT token contract
    * @param {number} tokenId - ID of the NFT
    * @returns {Promise<string>} Promise with the address of the owner of the NFT
    * */
-  async ownerOf(tokenAddress: string, tokenId: number): Promise<string> {
-    const contract = this._getContract(tokenAddress);
+  async ownerOf(contractAddress: string, tokenId: number): Promise<string> {
+    const contract = this._getContract(contractAddress);
 
     try {
       return await contract['ownerOf'](tokenId);
@@ -172,16 +172,16 @@ export class Erc721Manager {
    * Change or reaffirm the approved address for an NFT
    * @param {object} params - Object with the parameters for the operation
    * @param {string} params.to - Address to be approved for the given NFT
-   * @param {string} params.tokenAddress - Address of the ERC-721 NFT token contract
+   * @param {string} params.contractAddress - Address of the ERC-721 NFT token contract
    * @param {number} params.tokenId - ID of the NFT
    * @param {string} [paymaster='0x'] - Address of the paymaster contract
    * @returns {Promise<UserOperationResponse>} Promise with the response of the operation
    * */
   async approve(params: ApproveErc721Params, paymaster: string = '0x'): Promise<UserOperationResponse> {
-    const contract = new Contract(params.tokenAddress, ERC721Abi, this.sdk.rpcProvider);
+    const contract = new Contract(params.contractAddress, ERC721Abi, this.sdk.rpcProvider);
 
     const txData = contract.interface.encodeFunctionData('approve', [params.to, params.tokenId]);
-    return this.sdk.execute(txData, params.tokenAddress, toBeHex(0), paymaster);
+    return this.sdk.execute(txData, params.contractAddress, toBeHex(0), paymaster);
   }
 
   /**
@@ -190,15 +190,15 @@ export class Erc721Manager {
    * @param {object} params - Object with the parameters for the operation
    * @param {string} params.operator - Address to be approved for the given NFT
    * @param {boolean} params.approved - True if the operator is approved, false to revoke approval
-   * @param {string} params.tokenAddress - Address of the ERC-721 NFT token contract
+   * @param {string} params.contractAddress - Address of the ERC-721 NFT token contract
    * @param {string} [paymaster='0x'] - Address of the paymaster contract
    * @returns {Promise<UserOperationResponse>} Promise with the response of the operation
    * */
   setApprovalForAll(params: ApproveAllErc721Params, paymaster: string = '0x'): Promise<UserOperationResponse> {
-    const contract = this._getContract(params.tokenAddress);
+    const contract = this._getContract(params.contractAddress);
 
     const txData = contract.interface.encodeFunctionData('setApprovalForAll', [params.operator, params.approved]);
-    return this.sdk.execute(txData, params.tokenAddress, toBeHex(0), paymaster);
+    return this.sdk.execute(txData, params.contractAddress, toBeHex(0), paymaster);
 
   }
 
@@ -210,15 +210,15 @@ export class Erc721Manager {
    * @param {string} params.from - The current owner of the NFT
    * @param {string} params.to - The new owner
    * @param {number} params.tokenId - ID of the NFT
-   * @param {string} params.tokenAddress - Address of the ERC-721 NFT token contract
+   * @param {string} params.contractAddress - Address of the ERC-721 NFT token contract
    * @param {string} [paymaster='0x'] - Address of the paymaster contract
    * @returns {Promise<UserOperationResponse>} Promise with the response of the operation
    * */
   transferFrom(params: TransferErc721Params, paymaster: string = '0x'): Promise<UserOperationResponse> {
-    const contract = this._getContract(params.tokenAddress);
+    const contract = this._getContract(params.contractAddress);
 
     const txData = contract.interface.encodeFunctionData('transferFrom', [params.from, params.to, params.tokenId]);
-    return this.sdk.execute(txData, params.tokenAddress, toBeHex(0), paymaster);
+    return this.sdk.execute(txData, params.contractAddress, toBeHex(0), paymaster);
   }
 
   /**
@@ -227,13 +227,13 @@ export class Erc721Manager {
    * @param {string} params.from - The current owner of the NFT
    * @param {string} params.to - The new owner
    * @param {number} params.tokenId - ID of the NFT
-   * @param {string} params.tokenAddress - Address of the ERC-721 NFT token contract
+   * @param {string} params.contractAddress - Address of the ERC-721 NFT token contract
    * @param {string} [params.data] - Additional data with no specified format, sent in call to `params.to`
    * @param {string} [paymaster='0x'] - Address of the paymaster contract
    * @returns {Promise<UserOperationResponse>} Promise with the response of the operation
    * */
   safeTransferFrom(params: SafeTransferErc721Params, paymaster: string = '0x'): Promise<UserOperationResponse> {
-    const contract = this._getContract(params.tokenAddress);
+    const contract = this._getContract(params.contractAddress);
 
     const callParams = [params.from, params.to, params.tokenId];
     let functionName = 'safeTransferFrom(address _from, address _to, uint256 _tokenId)';
@@ -244,10 +244,10 @@ export class Erc721Manager {
     }
 
     const txData = contract.interface.encodeFunctionData(functionName, callParams);
-    return this.sdk.execute(txData, params.tokenAddress, toBeHex(0), paymaster);
+    return this.sdk.execute(txData, params.contractAddress, toBeHex(0), paymaster);
   }
 
-  private _getContract(tokenAddress: string): Contract {
-    return new Contract(tokenAddress, ERC721Abi, this.sdk.rpcProvider);
+  private _getContract(contractAddress: string): Contract {
+    return new Contract(contractAddress, ERC721Abi, this.sdk.rpcProvider);
   }
 }

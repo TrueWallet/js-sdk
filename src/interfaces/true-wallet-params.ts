@@ -7,7 +7,7 @@ export interface SendParams {
 }
 
 export interface SendErc20Params extends SendParams {
-  tokenAddress: string;
+  contractAddress: string;
 }
 
 export interface ContractCallParams {
@@ -23,27 +23,27 @@ export interface ContractWriteParams extends ContractCallParams {
 
 export interface ApproveErc20Params {
   spender: string,
-  tokenAddress: string,
+  contractAddress: string,
   amount: bigint | number | string
 }
 
 export interface ApproveErc721Params {
   to: string,
-  tokenAddress: string,
+  contractAddress: string,
   tokenId: number
 }
 
 export interface ApproveAllErc721Params {
   operator: string,
   approved: boolean,
-  tokenAddress: string
+  contractAddress: string
 }
 
 export interface TransferErc721Params {
   from: string,
   to: string,
   tokenId: number,
-  tokenAddress: string
+  contractAddress: string
 }
 
 export interface SafeTransferErc721Params extends TransferErc721Params {
