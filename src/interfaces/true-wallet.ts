@@ -3,7 +3,7 @@ import { UserOperationBuilder, UserOperationResponse } from "../user-operation-b
 import { BundlerClient } from "../bundler";
 import { ContractCallParams, ContractWriteParams, SendParams } from "./true-wallet-params";
 import { TrueWalletModules } from "../types";
-import { Erc20Manager, Erc721Manager } from "../classes";
+import { Erc1155Manager, Erc20Manager, Erc721Manager } from "../classes";
 
 export interface TrueWallet {
   ready: boolean;
@@ -12,6 +12,7 @@ export interface TrueWallet {
   bundler: BundlerClient;
   erc20: Erc20Manager;
   erc721: Erc721Manager;
+  erc1155: Erc1155Manager;
 
   get address(): string;
 

@@ -26,7 +26,7 @@ export const ERC721Abi = [
 ];
 
 /**
- * Helper class to run ERC721 tokens functions
+ * Helper class to run ERC-721 tokens functions
  * */
 export class Erc721Manager {
   private sdk: TrueWalletSDK;

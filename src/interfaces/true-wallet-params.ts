@@ -49,3 +49,26 @@ export interface TransferErc721Params {
 export interface SafeTransferErc721Params extends TransferErc721Params {
   data?: string;
 }
+
+export interface BaseErc1155TransferParams {
+  from: string,
+  to: string,
+  data?: string,
+  contractAddress: string
+}
+
+export interface TransferErc1155Params extends BaseErc1155TransferParams {
+  id: number,
+  value: number
+}
+
+export interface BatchTransferErc1155Params extends BaseErc1155TransferParams {
+  ids: number[],
+  values: number[]
+}
+
+export interface SetApprovalForAllErc1155Params {
+  operator: string,
+  approved: boolean,
+  contractAddress: string
+}

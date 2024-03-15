@@ -18,7 +18,7 @@ export const ERC20Abi = [
 ];
 
 /**
- * Helper class to run ERC20 tokens functions
+ * Helper class to run ERC-20 tokens functions
  * */
 export class Erc20Manager {
   private sdk: TrueWalletSDK;

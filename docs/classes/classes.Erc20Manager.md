@@ -1,32 +1,32 @@
-[True Wallet SDK](../README.md) / [Modules](../modules.md) / [classes/erc-20](../modules/classes_erc_20.md) / Erc20Manager
+[True Wallet SDK](../README.md) / [Modules](../modules.md) / [classes](../modules/classes.md) / Erc20Manager
 
 # Class: Erc20Manager
 
-[classes/erc-20](../modules/classes_erc_20.md).Erc20Manager
+[classes](../modules/classes.md).Erc20Manager
 
-Helper class to run ERC20 tokens functions
+Helper class to run ERC-20 tokens functions
 
 ## Table of contents
 
 ### Methods
 
-- [allowance](classes_erc_20.Erc20Manager.md#allowance)
-- [approve](classes_erc_20.Erc20Manager.md#approve)
-- [balanceOf](classes_erc_20.Erc20Manager.md#balanceof)
-- [decimals](classes_erc_20.Erc20Manager.md#decimals)
-- [getBalance](classes_erc_20.Erc20Manager.md#getbalance)
-- [name](classes_erc_20.Erc20Manager.md#name)
-- [send](classes_erc_20.Erc20Manager.md#send)
-- [symbol](classes_erc_20.Erc20Manager.md#symbol)
-- [totalSupply](classes_erc_20.Erc20Manager.md#totalsupply)
-- [transfer](classes_erc_20.Erc20Manager.md#transfer)
-- [transferFrom](classes_erc_20.Erc20Manager.md#transferfrom)
+- [allowance](classes.Erc20Manager.md#allowance)
+- [approve](classes.Erc20Manager.md#approve)
+- [balanceOf](classes.Erc20Manager.md#balanceof)
+- [decimals](classes.Erc20Manager.md#decimals)
+- [getBalance](classes.Erc20Manager.md#getbalance)
+- [name](classes.Erc20Manager.md#name)
+- [send](classes.Erc20Manager.md#send)
+- [symbol](classes.Erc20Manager.md#symbol)
+- [totalSupply](classes.Erc20Manager.md#totalsupply)
+- [transfer](classes.Erc20Manager.md#transfer)
+- [transferFrom](classes.Erc20Manager.md#transferfrom)
 
 ## Methods
 
 ### allowance
 
-▸ **allowance**(`tokenAddress`, `owner`, `spender`): `Promise`\<`bigint`\>
+▸ **allowance**(`contractAddress`, `owner`, `spender`): `Promise`\<`bigint`\>
 
 Returns the amount which `spender` is still allowed to withdraw from `owner`.
 
@@ -34,7 +34,7 @@ Returns the amount which `spender` is still allowed to withdraw from `owner`.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `tokenAddress` | `string` | Address of the token |
+| `contractAddress` | `string` | Address of the ERC-20 token contract |
 | `owner` | `string` | Address of the account that owns the tokens |
 | `spender` | `string` | Address of the account that is allowed to spend the tokens |
 
@@ -70,7 +70,7 @@ ___
 
 ### balanceOf
 
-▸ **balanceOf**(`tokenAddress`, `owner`): `Promise`\<`bigint`\>
+▸ **balanceOf**(`contractAddress`, `owner`): `Promise`\<`bigint`\>
 
 Returns the account balance of another account with address `owner`.
 
@@ -78,7 +78,7 @@ Returns the account balance of another account with address `owner`.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `tokenAddress` | `string` | Address of the token |
+| `contractAddress` | `string` | Address of the ERC-20 token contract |
 | `owner` | `string` | Address of the account for the balance check |
 
 #### Returns
@@ -91,7 +91,7 @@ ___
 
 ### decimals
 
-▸ **decimals**(`tokenAddress`): `Promise`\<`bigint`\>
+▸ **decimals**(`contractAddress`): `Promise`\<`bigint`\>
 
 Returns the number of decimals the token uses
 
@@ -99,7 +99,7 @@ Returns the number of decimals the token uses
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `tokenAddress` | `string` | Address of the token |
+| `contractAddress` | `string` | Address of the ERC-20 token contract |
 
 #### Returns
 
@@ -111,7 +111,7 @@ ___
 
 ### getBalance
 
-▸ **getBalance**(`tokenAddress`): `Promise`\<`string`\>
+▸ **getBalance**(`contractAddress`): `Promise`\<`string`\>
 
 Returns the balance of the current wallet in tokens
 
@@ -119,7 +119,7 @@ Returns the balance of the current wallet in tokens
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `tokenAddress` | `string` | Address of the token |
+| `contractAddress` | `string` | Address of the ERC-20 token contract |
 
 #### Returns
 
@@ -131,7 +131,7 @@ ___
 
 ### name
 
-▸ **name**(`tokenAddress`): `Promise`\<`string`\>
+▸ **name**(`contractAddress`): `Promise`\<`string`\>
 
 Returns the name of the token
 
@@ -139,7 +139,7 @@ Returns the name of the token
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `tokenAddress` | `string` | Address of the token |
+| `contractAddress` | `string` | Address of the ERC-20 token contract |
 
 #### Returns
 
@@ -172,7 +172,7 @@ ___
 
 ### symbol
 
-▸ **symbol**(`tokenAddress`): `Promise`\<`string`\>
+▸ **symbol**(`contractAddress`): `Promise`\<`string`\>
 
 Returns the symbol of the token
 
@@ -180,7 +180,7 @@ Returns the symbol of the token
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `tokenAddress` | `string` | Address of the token |
+| `contractAddress` | `string` | Address of the ERC-20 token contract |
 
 #### Returns
 
@@ -192,7 +192,7 @@ ___
 
 ### totalSupply
 
-▸ **totalSupply**(`tokenAddress`): `Promise`\<`bigint`\>
+▸ **totalSupply**(`contractAddress`): `Promise`\<`bigint`\>
 
 Returns the total token supply.
 
@@ -200,7 +200,7 @@ Returns the total token supply.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `tokenAddress` | `string` | Address of the token |
+| `contractAddress` | `string` | Address of the ERC-20 token contract |
 
 #### Returns
 

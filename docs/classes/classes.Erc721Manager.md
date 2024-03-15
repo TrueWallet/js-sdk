@@ -1,26 +1,26 @@
-[True Wallet SDK](../README.md) / [Modules](../modules.md) / [classes/erc-721](../modules/classes_erc_721.md) / Erc721Manager
+[True Wallet SDK](../README.md) / [Modules](../modules.md) / [classes](../modules/classes.md) / Erc721Manager
 
 # Class: Erc721Manager
 
-[classes/erc-721](../modules/classes_erc_721.md).Erc721Manager
+[classes](../modules/classes.md).Erc721Manager
 
-Helper class to run ERC721 tokens functions
+Helper class to run ERC-721 tokens functions
 
 ## Table of contents
 
 ### Methods
 
-- [approve](classes_erc_721.Erc721Manager.md#approve)
-- [balanceOf](classes_erc_721.Erc721Manager.md#balanceof)
-- [getApproved](classes_erc_721.Erc721Manager.md#getapproved)
-- [isApprovedForAll](classes_erc_721.Erc721Manager.md#isapprovedforall)
-- [name](classes_erc_721.Erc721Manager.md#name)
-- [ownerOf](classes_erc_721.Erc721Manager.md#ownerof)
-- [safeTransferFrom](classes_erc_721.Erc721Manager.md#safetransferfrom)
-- [setApprovalForAll](classes_erc_721.Erc721Manager.md#setapprovalforall)
-- [symbol](classes_erc_721.Erc721Manager.md#symbol)
-- [tokenURI](classes_erc_721.Erc721Manager.md#tokenuri)
-- [transferFrom](classes_erc_721.Erc721Manager.md#transferfrom)
+- [approve](classes.Erc721Manager.md#approve)
+- [balanceOf](classes.Erc721Manager.md#balanceof)
+- [getApproved](classes.Erc721Manager.md#getapproved)
+- [isApprovedForAll](classes.Erc721Manager.md#isapprovedforall)
+- [name](classes.Erc721Manager.md#name)
+- [ownerOf](classes.Erc721Manager.md#ownerof)
+- [safeTransferFrom](classes.Erc721Manager.md#safetransferfrom)
+- [setApprovalForAll](classes.Erc721Manager.md#setapprovalforall)
+- [symbol](classes.Erc721Manager.md#symbol)
+- [tokenURI](classes.Erc721Manager.md#tokenuri)
+- [transferFrom](classes.Erc721Manager.md#transferfrom)
 
 ## Methods
 
@@ -47,7 +47,7 @@ ___
 
 ### balanceOf
 
-▸ **balanceOf**(`tokenAddress`): `Promise`\<`string`\>
+▸ **balanceOf**(`contractAddress`): `Promise`\<`string`\>
 
 Count all NFTs assigned to an owner
 
@@ -55,7 +55,7 @@ Count all NFTs assigned to an owner
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `tokenAddress` | `string` | Address of the ERC-721 NFT token contract |
+| `contractAddress` | `string` | Address of the ERC-721 NFT token contract |
 
 #### Returns
 
@@ -67,7 +67,7 @@ ___
 
 ### getApproved
 
-▸ **getApproved**(`tokenAddress`, `tokenId`): `Promise`\<`string`\>
+▸ **getApproved**(`contractAddress`, `tokenId`): `Promise`\<`string`\>
 
 Get the approved address for a single NFT
 
@@ -75,7 +75,7 @@ Get the approved address for a single NFT
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `tokenAddress` | `string` | Address of the ERC-721 NFT token contract |
+| `contractAddress` | `string` | Address of the ERC-721 NFT token contract |
 | `tokenId` | `number` | ID of the NFT |
 
 #### Returns
@@ -88,7 +88,7 @@ ___
 
 ### isApprovedForAll
 
-▸ **isApprovedForAll**(`tokenAddress`, `owner`, `operator`): `Promise`\<`boolean`\>
+▸ **isApprovedForAll**(`contractAddress`, `owner`, `operator`): `Promise`\<`boolean`\>
 
 Query if an address is an authorized operator for another address
  *
@@ -97,7 +97,7 @@ Query if an address is an authorized operator for another address
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `tokenAddress` | `string` | Address of the ERC-721 NFT token contract * |
+| `contractAddress` | `string` | Address of the ERC-721 NFT token contract * |
 | `owner` | `string` | The address that owns the NFTs * |
 | `operator` | `string` | The address that acts on behalf of the owner * |
 
@@ -111,7 +111,7 @@ ___
 
 ### name
 
-▸ **name**(`tokenAddress`): `Promise`\<`string`\>
+▸ **name**(`contractAddress`): `Promise`\<`string`\>
 
 A descriptive name for a collection of NFTs in this contract
 
@@ -119,7 +119,7 @@ A descriptive name for a collection of NFTs in this contract
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `tokenAddress` | `string` | Address of the ERC-721 NFT token contract |
+| `contractAddress` | `string` | Address of the ERC-721 NFT token contract |
 
 #### Returns
 
@@ -131,7 +131,7 @@ ___
 
 ### ownerOf
 
-▸ **ownerOf**(`tokenAddress`, `tokenId`): `Promise`\<`string`\>
+▸ **ownerOf**(`contractAddress`, `tokenId`): `Promise`\<`string`\>
 
 Find the owner of an NFT
 
@@ -139,7 +139,7 @@ Find the owner of an NFT
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `tokenAddress` | `string` | Address of the ERC-721 NFT token contract |
+| `contractAddress` | `string` | Address of the ERC-721 NFT token contract |
 | `tokenId` | `number` | ID of the NFT |
 
 #### Returns
@@ -195,7 +195,7 @@ ___
 
 ### symbol
 
-▸ **symbol**(`tokenAddress`): `Promise`\<`string`\>
+▸ **symbol**(`contractAddress`): `Promise`\<`string`\>
 
 An abbreviated name for NFTs in this contract
 
@@ -203,7 +203,7 @@ An abbreviated name for NFTs in this contract
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `tokenAddress` | `string` | Address of the ERC-721 NFT token contract |
+| `contractAddress` | `string` | Address of the ERC-721 NFT token contract |
 
 #### Returns
 
@@ -215,7 +215,7 @@ ___
 
 ### tokenURI
 
-▸ **tokenURI**(`tokenAddress`, `tokenId`): `Promise`\<`string`\>
+▸ **tokenURI**(`contractAddress`, `tokenId`): `Promise`\<`string`\>
 
 A distinct Uniform Resource Identifier (URI) for a given asset.
 
@@ -223,7 +223,7 @@ A distinct Uniform Resource Identifier (URI) for a given asset.
 
 | Name | Type | Description |
 | :------ | :------ | :------ |
-| `tokenAddress` | `string` | Address of the ERC-721 NFT token contract |
+| `contractAddress` | `string` | Address of the ERC-721 NFT token contract |
 | `tokenId` | `number` | ID of the NFT |
 
 #### Returns

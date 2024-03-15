@@ -1,5 +1,5 @@
 {
-  "entryPoints": ["src/TrueWalletSDK.ts", "src/index.ts", "src/classes/erc-20.ts", "src/classes/erc-721.ts"],
+  "entryPoints": ["src/TrueWalletSDK.ts", "src/index.ts", "src/classes/index.ts"],
   "out": "docs",
   "name": "True Wallet SDK",
   "excludeNotDocumented": true,
