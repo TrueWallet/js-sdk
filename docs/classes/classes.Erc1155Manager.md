@@ -44,7 +44,7 @@ ___
 
 ### balanceOfBatch
 
-▸ **balanceOfBatch**(`contractAddress`, `owners`, `ids`): `Promise`\<`ProxyConstructor`\>
+▸ **balanceOfBatch**(`contractAddress`, `owners`, `ids`): `Promise`\<`bigint`[]\>
 
 Get the balance of multiple account/token pairs
 
@@ -58,7 +58,7 @@ Get the balance of multiple account/token pairs
 
 #### Returns
 
-`Promise`\<`ProxyConstructor`\>
+`Promise`\<`bigint`[]\>
 
 The `params.owner`'s balance of the token types requested (i.e. balance for each (owner, id) pair)
 

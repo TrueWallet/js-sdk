@@ -85,9 +85,9 @@ export class Erc1155Manager {
    * @param {string} contractAddress - Address of the ERC-1155 contract
    * @param {string[]} owners - The addresses of the token holders
    * @param {number[]} ids - ID of the tokens
-   * @return {Promise<ProxyConstructor>} The `params.owner`'s balance of the token types requested (i.e. balance for each (owner, id) pair)
+   * @return {Promise<bigint[]>} The `params.owner`'s balance of the token types requested (i.e. balance for each (owner, id) pair)
    * */
-  async balanceOfBatch(contractAddress: string, owners: string[], ids: number[]): Promise<ProxyConstructor> {
+  async balanceOfBatch(contractAddress: string, owners: string[], ids: number[]): Promise<bigint[]> {
     const contract = this._getContract(contractAddress);
 
     return contract.balanceOfBatch(owners, ids);
