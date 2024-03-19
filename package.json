@@ -1,6 +1,6 @@
 {
   "name": "@truewallet/sdk",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "True Wallet SDK to manage ERC-4337 wallet",
   "author": "TrueWallet (https://true-wallet.io/)",
   "homepage": "https://docs.true-wallet.io/",
