@@ -317,6 +317,18 @@ export class TrueWalletSDK implements TrueWallet {
   }
 
   /**
+   * Method to check if given module is installed
+   * @method isModuleInstalled
+   * @param {TrueWalletModules} module - module to check
+   * @returns {Promise<boolean>} - is module installed
+   * */
+  async isModuleInstalled(module: TrueWalletModules): Promise<boolean> {
+    const modules = await this.getInstalledModules();
+    const moduleAddress = this.getModuleAddress(module);
+    return modules[0].includes(moduleAddress);
+  }
+
+  /**
    * Method to check if given address is wallet owner
    * @method isWalletOwner
    * @param {string} address - address to check

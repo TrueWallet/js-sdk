@@ -27,5 +27,6 @@ export interface TrueWallet {
   removeModule(module: TrueWalletModules): Promise<UserOperationResponse>;
   getInstalledModules(): Promise<string[]>;
   getModuleAddress(module: TrueWalletModules): string;
+  isModuleInstalled(module: TrueWalletModules): Promise<boolean>;
   isWalletOwner(address: string): Promise<boolean>;
 }

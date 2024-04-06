@@ -26,6 +26,7 @@ Main SDK class
 - [getModuleAddress](TrueWalletSDK.TrueWalletSDK.md#getmoduleaddress)
 - [getNonce](TrueWalletSDK.TrueWalletSDK.md#getnonce)
 - [installModule](TrueWalletSDK.TrueWalletSDK.md#installmodule)
+- [isModuleInstalled](TrueWalletSDK.TrueWalletSDK.md#ismoduleinstalled)
 - [isWalletOwner](TrueWalletSDK.TrueWalletSDK.md#iswalletowner)
 - [removeModule](TrueWalletSDK.TrueWalletSDK.md#removemodule)
 - [send](TrueWalletSDK.TrueWalletSDK.md#send)
@@ -256,6 +257,34 @@ installModule
 #### Implementation of
 
 TrueWallet.installModule
+
+___
+
+### isModuleInstalled
+
+▸ **isModuleInstalled**(`module`): `Promise`\<`boolean`\>
+
+Method to check if given module is installed
+
+#### Parameters
+
+| Name | Type | Description |
+| :------ | :------ | :------ |
+| `module` | `TrueWalletModules` | module to check |
+
+#### Returns
+
+`Promise`\<`boolean`\>
+
+- is module installed
+
+**`Method`**
+
+isModuleInstalled
+
+#### Implementation of
+
+TrueWallet.isModuleInstalled
 
 ___
 
