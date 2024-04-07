@@ -4,6 +4,7 @@ import { BundlerClient } from "../bundler";
 import { ContractCallParams, ContractWriteParams, SendParams } from "./true-wallet-params";
 import { TrueWalletModules } from "../types";
 import { Erc1155Manager, Erc20Manager, Erc721Manager } from "../classes";
+import { TrueWalletRecoveryModule } from "../modules";
 
 export interface TrueWallet {
   ready: boolean;
@@ -13,6 +14,7 @@ export interface TrueWallet {
   erc20: Erc20Manager;
   erc721: Erc721Manager;
   erc1155: Erc1155Manager;
+  socialRecoveryModule: TrueWalletRecoveryModule;
 
   get address(): string;
 

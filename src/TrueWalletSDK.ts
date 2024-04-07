@@ -35,7 +35,7 @@ export class TrueWalletSDK implements TrueWallet {
   private entrypointSC!: Contract;
   private walletSC!: Contract;
 
-  private socialRecoveryModule: TrueWalletRecoveryModule | null = null;
+  socialRecoveryModule!: TrueWalletRecoveryModule;
 
   operationBuilder!: UserOperationBuilder;
   bundler!: BundlerClient;

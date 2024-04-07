@@ -4,6 +4,10 @@
 
 ## Table of contents
 
+### Classes
+
+- [TrueWalletRecoveryModule](../classes/index.TrueWalletRecoveryModule.md)
+
 ### Functions
 
 - [fromWei](index.md#fromwei)

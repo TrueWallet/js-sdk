@@ -53,6 +53,10 @@ export const getRecoveryModuleInitData = (moduleData: RecoveryModuleData): strin
 };
 
 
+/**
+ * Social Recovery Module
+ * @class TrueWalletRecoveryModule
+ * */
 export class TrueWalletRecoveryModule {
   private readonly wallet: TrueWalletSDK;
   private readonly recoveryModuleSC: Contract;
@@ -131,24 +135,54 @@ export class TrueWalletRecoveryModule {
     return this.executeFn(txData, Modules.SecurityControlModule);
   }
 
+  /**
+   * Get the active guardians for a wallet.
+   * @method getGuardians
+   * @returns {Promise<string[]>} - The list of active guardians for a wallet
+   * */
   async getGuardians(): Promise<string[]> {
     return this.recoveryModuleSC['getGuardians'](this.wallet.address);
   }
 
+  /**
+   * Counts the number of active guardians for a wallet.
+   * @method getGuardiansCount
+   * @returns {Promise<bigint>} - The number of active guardians for a wallet
+   * */
   async getGuardiansCount(): Promise<bigint> {
     return this.recoveryModuleSC['guardiansCount'](this.wallet.address);
   }
 
+  /**
+   * Returns the bytes that are hashed to be signed by guardians.
+   * @method encodeSocialRecoveryData
+   * @param {string[]} newOwners - the list of addresses that will be the new owners of the wallet after recovery.
+   * @returns {Promise<string>} - The bytes that are hashed to be signed by guardians
+   * */
   async encodeSocialRecoveryData(newOwners: string[]): Promise<string> {
     const nonce = await this.nonce();
     return this.recoveryModuleSC.encodeSocialRecoveryData(this.wallet.address, newOwners, nonce);
   }
 
+
+  /**
+   * Checks if an address is a guardian for a wallet.
+   * @method isGuardian
+   * @param {string} guardianAddress - The address to check
+   * @returns {Promise<boolean>} - True if the address is a guardian for the wallet, false if not
+   * */
   async isGuardian(guardianAddress: string): Promise<boolean> {
     return this.recoveryModuleSC['isGuardian'](this.wallet.address, guardianAddress);
   }
 
-  async hasGuardianApproved(guardianAddress: string, owners: string[]): Promise<boolean> {
+  /**
+   * Retrieves specific guardian approval status a particular recovery request at current nonce.
+   * @method hasGuardianApproved
+   * @param {string} guardianAddress - The address of the guardian
+   * @param {string[]} owners - The list of addresses that will be the new owners of the wallet after recovery
+   * @returns {Promise<bigint>} - True if the guardian has approved the recovery request, false if not
+   * */
+  async hasGuardianApproved(guardianAddress: string, owners: string[]): Promise<bigint> {
     return this.recoveryModuleSC['hasGuardianApproved'](guardianAddress, this.wallet.address, owners);
   }
 
@@ -160,14 +194,32 @@ export class TrueWalletRecoveryModule {
     return this.recoveryModuleSC['getGuardiansHash'](this.wallet.address);
   }
 
-  async getRecoveryApprovals(newOwners: string[]): Promise<number> {
-    return this.recoveryModuleSC['getRecoveryApprovals'](this.wallet, newOwners);
+  /**
+   * Retrieves the guardian approval count for this particular recovery request at current nonce.
+   * @method getRecoveryApprovals
+   * @param {string} walletAddress - The address of the wallet
+   * @param {string[]} newOwners - The list of addresses that will be the new owners of the wallet after recovery
+   * @returns {Promise<bigint>} - The number of guardians that have approved the recovery request
+   * */
+  async getRecoveryApprovals(walletAddress: string, newOwners: string[]): Promise<bigint> {
+    return this.recoveryModuleSC['getRecoveryApprovals'](walletAddress, newOwners);
   }
 
-  async getRecoveryEntry(walletAddress: string): Promise<[string[], string, string]> {
+  /**
+   * Retrieves the wallet's current ongoing recovery request.
+   * @method getRecoveryEntry
+   * @param {string} walletAddress - The address of the wallet
+   * @returns {Promise<[string[], bigint, bigint]>} - The list of new owners, the time until which the recovery will be pending, and the nonce - unique nonce to ensure each recovery process is unique
+   * */
+  async getRecoveryEntry(walletAddress: string): Promise<[string[], bigint, bigint]> {
     return this.recoveryModuleSC['getRecoveryEntry'](walletAddress);
   }
 
+  /**
+   * Get the module nonce for a wallet.
+   * @method nonce
+   * @returns {Promise<bigint>} - The module nonce for a wallet
+   * */
   async nonce(): Promise<bigint> {
     return await this.recoveryModuleSC['nonce'](this.wallet.address);
   }
@@ -177,6 +229,11 @@ export class TrueWalletRecoveryModule {
     return this.recoveryModuleSC['getSocialRecoveryHash'](this.wallet, newOwners, nonce);
   }
 
+  /**
+   * Retrieves the wallet threshold count.
+   * @method getThreshold
+   * @returns {Promise<bigint>} - The wallet threshold count
+   * */
   async getThreshold(): Promise<bigint> {
     return await this.recoveryModuleSC['threshold'](this.wallet.address);
   }
