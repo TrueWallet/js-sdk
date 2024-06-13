@@ -16,7 +16,8 @@
     "example:browser": "npx http-server -c-1",
     "example:node": "node ./examples/node/index.js",
     "prepare": "husky install",
-    "docs": "typedoc --plugin typedoc-plugin-markdown"
+    "docs": "typedoc --plugin typedoc-plugin-markdown",
+    "link": "rm -rf ./dist && npm run build && npm link"
   },
   "license": "GPL-3.0",
   "devDependencies": {

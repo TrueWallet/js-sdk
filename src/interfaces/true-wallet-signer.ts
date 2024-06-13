@@ -1,3 +1,4 @@
-import { Wallet, JsonRpcSigner } from "ethers";
-
-export type TrueWalletSigner = Wallet | JsonRpcSigner;
+export type TrueWalletSigner = {
+  address: string;
+  signMessage(message: string | Uint8Array): Promise<string>;
+}

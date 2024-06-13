@@ -1,6 +1,6 @@
 import { BundlerMethods } from "./bundler-methods";
 import { UserOperationData, UserOperationReceipt, UserOperationResponse } from "../user-operation-builder";
-import { BundlerError, BundlerErrorCodes } from "./bundler-error";
+import { BundlerError, BundlerMaxRetriesError } from "./bundler-error";
 import { getAddress } from "ethers";
 
 
@@ -69,10 +69,7 @@ export class BundlerClient {
 
           if (receipt === null) {
             if (useRetry && retries >= maxRetry) {
-              return reject(new BundlerError({
-                code: BundlerErrorCodes.MAX_RETRIES_EXCEEDED,
-                message: 'User operation not found',
-              }));
+              return reject(new BundlerMaxRetriesError('User operation not found'));
             }
 
             retries++;
@@ -112,10 +109,7 @@ export class BundlerClient {
     const res = await fetch(this.bundlerUrl, Object.assign({}, defaultOptions, options)).then((res) => res.json());
 
     if (res.error) {
-      throw new BundlerError({
-        code: BundlerErrorCodes.BUNDLER_ERROR,
-        message: res.error.message,
-      });
+      throw new BundlerError(res.error.message);
     }
 
     return res.result;

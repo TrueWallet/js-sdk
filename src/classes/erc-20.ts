@@ -1,7 +1,6 @@
 import { UserOperationResponse } from "../user-operation-builder";
 import { Contract, formatUnits, parseUnits, toBeHex } from "ethers";
-import { TrueWalletError } from "../types";
-import { TrueWalletErrorCodes } from "../constants";
+import { TWCallException } from "../types";
 import { ApproveErc20Params, SendErc20Params } from "../interfaces";
 import { TrueWalletSDK } from "../TrueWalletSDK";
 
@@ -41,10 +40,7 @@ export class Erc20Manager {
 
       return formatUnits(balance, decimals);
     } catch (err: unknown) {
-      throw new TrueWalletError({
-        code: TrueWalletErrorCodes.CALL_EXCEPTION,
-        message: (err as Error).message,
-      });
+      throw new TWCallException((<Error>err).message);
     }
   }
 
@@ -80,10 +76,7 @@ export class Erc20Manager {
     try {
       return await contract.name();
     } catch (err: unknown) {
-      throw new TrueWalletError({
-        code: TrueWalletErrorCodes.CALL_EXCEPTION,
-        message: (err as Error).message,
-      });
+      throw new TWCallException((<Error>err).message);
     }
   }
 
@@ -98,10 +91,7 @@ export class Erc20Manager {
     try {
       return await contract.symbol();
     } catch (err: unknown) {
-      throw new TrueWalletError({
-        code: TrueWalletErrorCodes.CALL_EXCEPTION,
-        message: (err as Error).message,
-      });
+      throw new TWCallException((<Error>err).message);
     }
   }
 
@@ -116,10 +106,7 @@ export class Erc20Manager {
     try {
       return await contract.decimals();
     } catch (err: unknown) {
-      throw new TrueWalletError({
-        code: TrueWalletErrorCodes.CALL_EXCEPTION,
-        message: (err as Error).message,
-      });
+      throw new TWCallException((<Error>err).message);
     }
   }
 
@@ -134,10 +121,7 @@ export class Erc20Manager {
     try {
       return await contract.totalSupply();
     } catch (err: unknown) {
-      throw new TrueWalletError({
-        code: TrueWalletErrorCodes.CALL_EXCEPTION,
-        message: (err as Error).message,
-      });
+      throw new TWCallException((<Error>err).message);
     }
   }
 
@@ -153,10 +137,7 @@ export class Erc20Manager {
     try {
       return await contract.balanceOf(owner);
     } catch (err: unknown) {
-      throw new TrueWalletError({
-        code: TrueWalletErrorCodes.CALL_EXCEPTION,
-        message: (err as Error).message,
-      });
+      throw new TWCallException((<Error>err).message);
     }
   }
 
@@ -173,10 +154,7 @@ export class Erc20Manager {
     try {
       return await contract.allowance(owner, spender);
     } catch (err: unknown) {
-      throw new TrueWalletError({
-        code: TrueWalletErrorCodes.CALL_EXCEPTION,
-        message: (err as Error).message,
-      });
+      throw new TWCallException((<Error>err).message);
     }
 
   }

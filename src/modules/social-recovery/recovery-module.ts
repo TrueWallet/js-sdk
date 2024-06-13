@@ -7,12 +7,16 @@ import {
   toBeHex,
   ZeroHash
 } from "ethers";
-import { Modules, TrueWalletErrorCodes } from "../../constants";
+import { Modules } from "../../constants";
 import { SocialRecoveryModuleAbi, TrueWalletAbi } from "../../abis";
 import { encodeFunctionData } from "../../utils";
 import { SecurityControlModuleAbi } from "../../abis/security-control-module-abi";
-import { TrueWalletError } from "../../types";
-import { RecoveryError, RecoveryErrorCodes } from "./recovery-module-errors";
+import {
+  TWModuleAlreadyInstalledError,
+  TWModuleNotInstalledError,
+  TWWalletNotReadyError
+} from "../../types";
+import { RecoveryError } from "./recovery-module-errors";
 import { TrueWalletSDK } from "../../TrueWalletSDK";
 import { UserOperationResponse } from "../../user-operation-builder";
 
@@ -72,18 +76,12 @@ export class TrueWalletRecoveryModule {
     const isInit = await this.recoveryModuleSC.isInit(this.wallet.address);
 
     if (isInit) {
-      throw new TrueWalletError({
-        code: TrueWalletErrorCodes.MODULE_ALREADY_INSTALLED,
-        message: `Social Recovery Module is already installed.`,
-      });
+      throw new TWModuleAlreadyInstalledError(`Social Recovery Module is already installed.`);
     }
 
     const isBasicInitialized = await this.securityControlModuleSC.basicInitialized(this.wallet.address);
     if (!isBasicInitialized) {
-      throw new TrueWalletError({
-        code: TrueWalletErrorCodes.WALLET_NOT_READY,
-        message: `Wallet is not initialized.`,
-      });
+      throw new TWWalletNotReadyError(`Wallet is not initialized.`);
     }
 
     const addModuleFromWalletTxData = encodeFunctionData(
@@ -114,10 +112,7 @@ export class TrueWalletRecoveryModule {
     const isInit = await this.recoveryModuleSC.isInit(this.wallet.address);
 
     if (!isInit) {
-      throw new TrueWalletError({
-        code: TrueWalletErrorCodes.MODULE_NOT_INSTALLED,
-        message: `Social Recovery Module is not installed.`,
-      });
+      throw new TWModuleNotInstalledError(`Social Recovery Module is not installed.`);
     }
 
     const removeModuleTxData = encodeFunctionData(
@@ -266,10 +261,7 @@ export class TrueWalletRecoveryModule {
 
     const canExecute = Number(executeAfter) * 1000 < Date.now();
     if (!canExecute) {
-      throw new RecoveryError({
-        code: RecoveryErrorCodes.RECOVERY_EXECUTE_NOT_READY,
-        message: `Execute recovery will be available after ${new Date(Number(executeAfter) * 1000).toLocaleString()}`,
-      });
+      throw new RecoveryError(`Execute recovery will be available after ${new Date(Number(executeAfter) * 1000).toLocaleString()}`);
     }
 
     const callData = encodeFunctionData(SocialRecoveryModuleAbi, 'executeRecovery', [wallet]);

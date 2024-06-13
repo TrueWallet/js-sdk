@@ -1,7 +1,6 @@
 import { TrueWalletSDK } from "../TrueWalletSDK";
 import { Contract, toBeHex } from "ethers";
-import { TrueWalletError } from "../types";
-import { TrueWalletErrorCodes } from "../constants";
+import { TWCallException } from "../types";
 import { UserOperationResponse } from "../user-operation-builder";
 import {
   ApproveAllErc721Params,
@@ -48,10 +47,7 @@ export class Erc721Manager {
 
       return balance.toString();
     } catch (err: unknown) {
-      throw new TrueWalletError({
-        code: TrueWalletErrorCodes.CALL_EXCEPTION,
-        message: (err as Error).message,
-      });
+      throw new TWCallException((<Error>err).message);
     }
   }
 
@@ -67,10 +63,7 @@ export class Erc721Manager {
     try {
       return await contract['getApproved'](tokenId);
     } catch (err: unknown) {
-      throw new TrueWalletError({
-        code: TrueWalletErrorCodes.CALL_EXCEPTION,
-        message: (err as Error).message,
-      });
+      throw new TWCallException((<Error>err).message);
     }
   }
 
@@ -87,10 +80,7 @@ export class Erc721Manager {
     try {
       return await contract['isApprovedForAll'](owner, operator);
     } catch (err: unknown) {
-      throw new TrueWalletError({
-        code: TrueWalletErrorCodes.CALL_EXCEPTION,
-        message: (err as Error).message,
-      });
+      throw new TWCallException((<Error>err).message);
     }
   }
 
@@ -105,10 +95,7 @@ export class Erc721Manager {
     try {
       return await contract['name']();
     } catch (err: unknown) {
-      throw new TrueWalletError({
-        code: TrueWalletErrorCodes.CALL_EXCEPTION,
-        message: (err as Error).message,
-      });
+      throw new TWCallException((<Error>err).message);
     }
   }
 
@@ -123,10 +110,7 @@ export class Erc721Manager {
     try {
       return await contract['symbol']();
     } catch (err: unknown) {
-      throw new TrueWalletError({
-        code: TrueWalletErrorCodes.CALL_EXCEPTION,
-        message: (err as Error).message,
-      });
+      throw new TWCallException((<Error>err).message);
     }
   }
 
@@ -142,10 +126,7 @@ export class Erc721Manager {
     try {
       return await contract['tokenURI'](tokenId);
     } catch (err: unknown) {
-      throw new TrueWalletError({
-        code: TrueWalletErrorCodes.CALL_EXCEPTION,
-        message: (err as Error).message,
-      });
+      throw new TWCallException((<Error>err).message);
     }
   }
 
@@ -161,10 +142,7 @@ export class Erc721Manager {
     try {
       return await contract['ownerOf'](tokenId);
     } catch (err: unknown) {
-      throw new TrueWalletError({
-        code: TrueWalletErrorCodes.CALL_EXCEPTION,
-        message: (err as Error).message,
-      });
+      throw new TWCallException((<Error>err).message);
     }
   }
 

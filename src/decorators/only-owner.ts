@@ -1,5 +1,4 @@
-import { TrueWalletError } from "../types";
-import { TrueWalletErrorCodes } from "../constants";
+import { TWOwnerCallError } from "../types";
 
 /* eslint-disable  @typescript-eslint/no-explicit-any */
 export const onlyOwner = (originalMethod: any, _context: unknown) => {
@@ -13,10 +12,7 @@ export const onlyOwner = (originalMethod: any, _context: unknown) => {
       const isOwner = await this.isWalletOwner(this.signer.address);
 
       if (!isOwner) {
-        throw new TrueWalletError({
-          code: TrueWalletErrorCodes.WALLET_NOT_OWNED,
-          message: `This operation is allowed only for the wallet owner.`
-        });
+        throw new TWOwnerCallError('This operation is allowed only for the wallet owner.');
       }
     }
 

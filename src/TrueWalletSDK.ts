@@ -12,10 +12,10 @@ import {
   JsonRpcProvider,
   parseEther, solidityPackedKeccak256, toBeHex
 } from "ethers";
-import { Modules, SmartContracts, TrueWalletErrorCodes } from "./constants";
+import { Modules, SmartContracts } from "./constants";
 import { entrypointABI, factoryABI, TrueWalletAbi, } from "./abis";
 import { UserOperationBuilder, UserOperationResponse } from "./user-operation-builder";
-import { TrueWalletError, TrueWalletModules } from "./types";
+import { TrueWalletModules, TWConfigError, TWUnsupportedModuleError } from "./types";
 import { BundlerClient } from "./bundler";
 import { encodeFunctionData, isContract, getSigner, getSecurityModuleInitData } from "./utils";
 import { RecoveryModuleData, TrueWalletRecoveryModule } from "./modules";
@@ -54,10 +54,7 @@ export class TrueWalletSDK implements TrueWallet {
     const isConfigValid = requiredParams.every((param) => Object.prototype.hasOwnProperty.call(config, param));
 
     if (!isConfigValid) {
-      throw new TrueWalletError({
-        code: TrueWalletErrorCodes.CONFIG_ERROR,
-        message: `Parameters 'salt', 'bundlerUrl' are required in config.`,
-      })
+      throw new TWConfigError(`Parameters 'salt', 'bundlerUrl' are required in config.`)
     }
 
     this.rpcProvider = new JsonRpcProvider(config.rpcProviderUrl || config.bundlerUrl);
@@ -70,7 +67,7 @@ export class TrueWalletSDK implements TrueWallet {
       entrypoint: this.entrypointSC.target as string,
     });
 
-    this.signer = await getSigner(config.signer);
+    this.signer = await getSigner(config);
 
     // FIXME: hardcoded wallet idx
     const walletAddress = await this.getWalletAddress(0);
@@ -267,10 +264,7 @@ export class TrueWalletSDK implements TrueWallet {
       case Modules.SocialRecoveryModule:
         return await (<TrueWalletRecoveryModule>this.socialRecoveryModule).install(moduleData as RecoveryModuleData);
       default:
-        throw new TrueWalletError({
-          code: TrueWalletErrorCodes.MODULE_NOT_SUPPORTED,
-          message: `Module ${module} is not supported`,
-        });
+        throw new TWUnsupportedModuleError(`Module ${module} is not supported`);
     }
   }
 
@@ -288,10 +282,7 @@ export class TrueWalletSDK implements TrueWallet {
       case Modules.SocialRecoveryModule:
         return (<TrueWalletRecoveryModule>this.socialRecoveryModule).remove();
       default:
-        throw new TrueWalletError({
-          code: TrueWalletErrorCodes.MODULE_NOT_SUPPORTED,
-          message: `Module ${module} is not supported`,
-        });
+        throw new TWUnsupportedModuleError(`Module ${module} is not supported`);
     }
   }
 

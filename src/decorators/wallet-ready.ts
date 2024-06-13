@@ -1,5 +1,4 @@
-import { TrueWalletError } from "../types";
-import { TrueWalletErrorCodes } from "../constants";
+import { TWWalletNotReadyError } from "../types";
 
 /* eslint-disable  @typescript-eslint/no-explicit-any */
 export const walletReady = (originalMethod: any, _context: unknown) => {
@@ -9,10 +8,7 @@ export const walletReady = (originalMethod: any, _context: unknown) => {
       this.ready = await this.isWalletReady();
 
       if (!this.ready) {
-        throw new TrueWalletError({
-          code: TrueWalletErrorCodes.WALLET_NOT_READY,
-          message: `Wallet is not smart contract yet.`
-        });
+        throw new TWWalletNotReadyError(`Wallet is not smart contract yet.`);
       }
     }
 
