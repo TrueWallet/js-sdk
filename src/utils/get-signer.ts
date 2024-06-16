@@ -1,8 +1,8 @@
 import { BrowserProvider, Mnemonic, solidityPackedKeccak256, Wallet } from "ethers";
 import { TrueWalletConfig, TrueWalletSigner } from "../interfaces";
 import { Eip1193Provider } from "ethers";
-import { JWTSigner } from "../classes";
-import { TWInvalidSignerTypeError, TWJwtInitSignerError, TWJwtSignerInvalidJwtError } from "../types";
+import { JWTSigner, JWTSignerService } from "../classes";
+import { TWInvalidSignerTypeError } from "../types";
 
 export const getSigner = async (config: TrueWalletConfig): Promise<TrueWalletSigner> => {
   switch (config.signer.type) {
@@ -13,7 +13,7 @@ export const getSigner = async (config: TrueWalletConfig): Promise<TrueWalletSig
     case 'privateKey':
       return new Wallet(config.signer.data[0] as string);
     case 'jwt':
-      return await getJWTSigner(config.bundlerUrl, config.signer.data[0] as string);
+      return await getJWTSigner(config.bundlerUrl, config.signer.data[0] as () => Promise<string>);
     default:
       throw new TWInvalidSignerTypeError(`${config.signer.type} is invalid signer type`);
   }
@@ -32,42 +32,15 @@ export const getInjectedSigner = async (provider: Eip1193Provider) => {
   return await browserProvider.getSigner();
 };
 
-export const getJWTSigner = async (bundlerUrl: string, jwt: string) => {
+export const getJWTSigner = async (bundlerUrl: string, jwt: () => Promise<string>) => {
   const url = new URL(bundlerUrl);
 
   const apiUrl = url.origin;
-  const version = url.pathname.split('/')[1];
-  const projectKey = url.pathname.split('/').slice(-1)[0];
+  const [_, version, projectKey] = url.pathname.split('/');
 
-  // TODO: uncomment to handle error
-  // projectKey.replace('0', '1');
+  const service = new JWTSignerService(`${apiUrl}/${version}/${projectKey}`, jwt);
+  const signer = new JWTSigner(service);
+  await signer.init();
 
-  const response = await fetch(`${apiUrl}/${version}/${projectKey}/wallets/get-address`, {
-    method: 'POST',
-    mode: 'cors',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ jwt_token: jwt }),
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-
-    switch (response.status) {
-      case 400:
-        throw new TWJwtSignerInvalidJwtError(error.detail.jwt_token);
-      // case 401:
-        // TODO: throw error
-      // case 403:
-        // TODO: throw error
-      default:
-        throw new TWJwtInitSignerError(JSON.stringify(error.detail));
-
-    }
-  }
-
-  const { address } = await response.json();
-
-  return new JWTSigner(address);
+  return signer;
 };

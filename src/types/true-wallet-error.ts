@@ -37,6 +37,18 @@ export class TWJwtSignerInvalidJwtError extends Error implements TWError {
   code = TWErrorCodes.JWT_SIGNER_INVALID_JWT;
 }
 
+export class TWJwtSignerInvalidKeyError extends Error implements TWError {
+  code = TWErrorCodes.JWT_SIGNER_INVALID_KEY;
+}
+
+export class TWJwtSignerInitializedError extends Error implements TWError {
+  code = TWErrorCodes.JWT_SIGNER_INITIALIZED;
+}
+
+export class TWJwtSignerLimitError extends Error implements TWError {
+  code = TWErrorCodes.JWT_SIGNER_LIMIT;
+}
+
 export class TWJwtInitSignerError extends Error implements TWError {
   code = TWErrorCodes.JWT_INIT_SIGNER_ERROR;
 }
